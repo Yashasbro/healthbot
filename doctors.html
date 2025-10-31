@@ -1,65 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Doctors — Practo Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body{font-family:'Poppins',sans-serif;background:#f7f9fc;color:#111;margin:0;padding:20px;}
-h1{text-align:center;color:#0b5cff;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:20px;max-width:1100px;margin:auto;}
-.card{background:white;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.08);padding:16px;transition:.2s;}
-.card:hover{transform:translateY(-3px);}
-img{width:100%;border-radius:10px;}
-h3{margin:8px 0 4px;color:#0b5cff;}
-.meta{color:#444;font-size:14px;}
-.rating{color:#f9a825;font-weight:600;margin:4px 0;}
-button{background:#0b5cff;color:white;border:none;padding:8px 14px;border-radius:8px;margin-top:10px;cursor:pointer;}
-button:hover{background:#0946c1;}
+body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;padding:22px;color:#0b1b2b}
+h1{color:#0b5cff;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 20px rgba(16,24,40,0.06);display:flex;gap:12px;align-items:flex-start}
+.thumb{width:90px;height:90px;border-radius:8px;object-fit:cover}
+.info{flex:1}
+.docname{font-weight:700;color:#0b5cff;margin-bottom:6px}
+.meta{font-size:13px;color:#6b7280;margin-bottom:6px}
+.badge{background:#eef6ff;color:#0b5cff;padding:5px 8px;border-radius:8px;font-size:12px;margin-right:5px}
+button{background:#0b5cff;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+button:hover{background:#0946c1}
 </style>
 </head>
 <body>
 <h1>Recommended Doctors</h1>
-<div id="doctors" class="grid"></div>
+<p>Based on your symptoms and preferences:</p>
+<div id="grid" class="grid"></div>
 
 <script>
 const p=new URLSearchParams(location.search);
-const spec=p.get('specialist')||'General Physician';
-const data={symptoms:p.get('symptoms')||'',date:p.get('date')||'',time:p.get('time')||'',area:p.get('area')||'',package:p.get('package')||'',autobook:p.get('autobook')==='true'};
+const specialist=p.get('specialist')||'General Physician';
+const book=p.get('book')==='true';
+const data=Object.fromEntries(p.entries());
 
-const doctors={
-"Cardiologist":[
-{img:"https://randomuser.me/api/portraits/women/44.jpg",name:"Dr Ananya Rao",hospital:"Fortis Hospital – Indiranagar",rating:4.8,exp:"12 yrs"},
-{img:"https://randomuser.me/api/portraits/men/45.jpg",name:"Dr Rajesh Menon",hospital:"Apollo Clinic – Koramangala",rating:4.7,exp:"10 yrs"}],
-"Gastroenterologist":[
-{img:"https://randomuser.me/api/portraits/men/33.jpg",name:"Dr Ravi Sharma",hospital:"Manipal Hospital – Whitefield",rating:4.6,exp:"14 yrs"},
-{img:"https://randomuser.me/api/portraits/women/55.jpg",name:"Dr Leena George",hospital:"CloudNine – Jayanagar",rating:4.9,exp:"11 yrs"}],
-"General Physician":[
-{img:"https://randomuser.me/api/portraits/men/66.jpg",name:"Dr Arjun Desai",hospital:"Apollo – Koramangala",rating:4.6,exp:"15 yrs"},
-{img:"https://randomuser.me/api/portraits/women/68.jpg",name:"Dr Meera Iyer",hospital:"CloudNine – Whitefield",rating:4.8,exp:"10 yrs"}]
+const DOCTORS={
+ "Cardiologist":[{img:"https://randomuser.me/api/portraits/women/40.jpg",name:"Dr Ananya Rao",hospital:"Fortis Hospital, Indiranagar",exp:"12 yrs",rating:4.8},
+ {img:"https://randomuser.me/api/portraits/men/45.jpg",name:"Dr Rajesh Menon",hospital:"Apollo Clinic, Koramangala",exp:"10 yrs",rating:4.7}],
+ "Gastroenterologist":[{img:"https://randomuser.me/api/portraits/men/33.jpg",name:"Dr Ravi Sharma",hospital:"Manipal Hospital, Whitefield",exp:"14 yrs",rating:4.6},
+ {img:"https://randomuser.me/api/portraits/women/55.jpg",name:"Dr Leena George",hospital:"Cloudnine, Jayanagar",exp:"11 yrs",rating:4.9}],
+ "General Physician":[{img:"https://randomuser.me/api/portraits/men/66.jpg",name:"Dr Arjun Desai",hospital:"Apollo 24x7, Koramangala",exp:"15 yrs",rating:4.6},
+ {img:"https://randomuser.me/api/portraits/women/68.jpg",name:"Dr Meera Iyer",hospital:"Cloudnine, Whitefield",exp:"10 yrs",rating:4.8}]
 };
+const list=DOCTORS[specialist]||DOCTORS["General Physician"];
+const grid=document.getElementById('grid');
 
-const list=doctors[spec]||doctors["General Physician"];
-const box=document.getElementById('doctors');
-list.forEach(d=>{
- box.innerHTML+=`
- <div class="card">
-   <img src="${d.img}">
-   <h3>${d.name}</h3>
-   <div class="meta">${spec} • ${d.exp}</div>
+for(const d of list){
+ const card=document.createElement('div');
+ card.className='card';
+ card.innerHTML=`<img class="thumb" src="${d.img}">
+ <div class="info">
+   <div class="docname">${d.name}</div>
+   <div class="meta">${specialist} • ${d.exp}</div>
    <div class="meta">${d.hospital}</div>
-   <div class="rating">⭐ ${d.rating}/5</div>
-   <button onclick="book('${encodeURIComponent(d.name)}')">Book Appointment</button>
- </div>`;
-});
-
-function book(doc){
- const q=new URLSearchParams({...data,doctor:doc,specialist:spec}).toString();
- window.location.href='book.html?'+q;
+   <div class="meta">★ ${d.rating}</div>
+   <span class="badge">Top Rated</span>
+   <span class="badge">Trusted Doctor</span>
+ </div>
+ <div><button onclick="bookDoc('${encodeURIComponent(d.name)}')">${book?'Book':'View'}</button></div>`;
+ grid.appendChild(card);
 }
-
-// auto-book first doctor if user said "yes"
-if(data.autobook){setTimeout(()=>book(encodeURIComponent(list[0].name)),1500);}
+function bookDoc(name){
+ if(!book)return alert("Viewing only. You chose not to book an appointment.");
+ const q=new URLSearchParams({...data,doctor:name}).toString();
+ location.href='book.html?'+q;
+}
 </script>
 </body>
 </html>
