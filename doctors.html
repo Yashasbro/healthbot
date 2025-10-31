@@ -1,49 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Available Doctors</title>
 <style>
- body{font-family:'Poppins',sans-serif;background:#f9f9fb;text-align:center;padding:2rem}
- .card{background:#fff;padding:1rem;margin:1rem auto;max-width:400px;border-radius:10px;box-shadow:0 0 8px rgba(0,0,0,0.1)}
- button{background:#007bff;color:#fff;border:none;padding:0.6rem 1.2rem;border-radius:8px;cursor:pointer}
- button:hover{background:#0056b3}
+  body{font-family:Poppins,sans-serif;background:#f6f8fb;padding:28px;color:#111;text-align:center}
+  h1{color:#0b5cff}
+  .card{background:#fff;padding:16px;border-radius:10px;max-width:620px;margin:12px auto;box-shadow:0 6px 20px rgba(9,30,66,0.06);text-align:left}
+  .docRow{display:flex;justify-content:space-between;align-items:center}
+  button{background:#0b5cff;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .meta{color:#555;font-size:14px;margin-top:6px}
 </style>
 </head>
 <body>
- <h1>👩‍⚕️ Doctors Recommended for You</h1>
- <div id="docList"></div>
+  <h1>👩‍⚕️ Doctors Recommended</h1>
+  <div id="results"></div>
 
- <script>
- const params=new URLSearchParams(location.search);
- const specialist=params.get("specialist")||"General Physician";
- const area=params.get("area")||"Indiranagar";
- const name=params.get("name")||"";
- const date=params.get("date")||"";
- const time=params.get("time")||"";
- const phone=params.get("phone")||"";
+<script>
+const params = new URLSearchParams(location.search);
+const specialist = params.get('specialist') || 'General Physician';
+const area = params.get('area') || '';
+const name = params.get('name') || '';
+const phone = params.get('phone') || '';
+const date = params.get('date') || '';
+const time = params.get('time') || '';
+const symptoms = params.get('symptoms') || '';
 
- const doctors={
-   Cardiologist:["Dr Ananya Rao","Dr Rohan Menon"],
-   Dermatologist:["Dr Sneha Patil","Dr Kiran Das"],
-   Gastroenterologist:["Dr Ravi Sharma","Dr Leena George"],
-   "General Physician":["Dr Meera Iyer","Dr Arjun Desai"]
- };
+const sampleDoctors = {
+  "Cardiologist": ["Dr. Ananya Rao","Dr. Rohan Menon"],
+  "Gastroenterologist": ["Dr. Ravi Sharma","Dr. Leena George"],
+  "Dermatologist": ["Dr. Sneha Patil","Dr. Kiran Das"],
+  "Neurologist": ["Dr. Suresh Iyer","Dr. Nisha Kulkarni"],
+  "ENT": ["Dr. Arjun Patel","Dr. Meera K"],
+  "General Physician": ["Dr. Meera Iyer","Dr. Arjun Desai"]
+};
 
- const list=document.getElementById("docList");
- (doctors[specialist]||[]).forEach(d=>{
-   const c=document.createElement("div");
-   c.className="card";
-   c.innerHTML=`<h3>${d}</h3><p>${specialist} | ${area}</p>
-   <button onclick="book('${d}')">Book Appointment</button>`;
-   list.appendChild(c);
- });
+const list = sampleDoctors[specialist] || sampleDoctors["General Physician"];
 
- function book(doc){
-   const q=new URLSearchParams({specialist,area,doc,name,date,time,phone}).toString();
-   location.href="book.html?"+q;
- }
- </script>
+const out = document.getElementById('results');
+out.innerHTML = `<div class="card"><strong>Detected specialist:</strong> ${specialist}<div class="meta">Area: ${area || 'Any'} • Symptoms: ${symptoms || 'Not provided'}</div></div>`;
+
+list.forEach(d => {
+  const c = document.createElement('div');
+  c.className = 'card';
+  c.innerHTML = `<div class="docRow"><div>
+    <h3 style="margin:0">${d}</h3>
+    <div class="meta">${specialist} • ${area || 'Various clinics'}</div>
+    </div>
+    <div><button onclick="book('${d.replace("'", '')}')">Book</button></div>
+  </div>`;
+  out.appendChild(c);
+});
+
+function book(doc){
+  const q = new URLSearchParams({
+    specialist, area, name, phone, date, time, doc, symptoms
+  }).toString();
+  window.location.href = 'book.html?' + q;
+}
+</script>
 </body>
 </html>
