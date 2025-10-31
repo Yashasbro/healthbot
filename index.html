@@ -87,4 +87,113 @@ async function speak(txt){
 }
 function listenOnce(timeout=10000){
   return new Promise(res=>{
-    const SR = window.Sp
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){res("");return;}
+    recognition = new SR();
+    recognition.lang="en-IN";
+    recognition.interimResults=true;
+    recognition.continuous=false;
+    let final="";
+    recognition.onresult=e=>{
+      for(let i=e.resultIndex;i<e.results.length;++i){
+        const tr=e.results[i][0].transcript;
+        if(e.results[i].isFinal) final=tr;
+      }
+    };
+    recognition.onend=()=>res(final.trim());
+    recognition.onerror=()=>res(final.trim());
+    recognition.start();
+    setTimeout(()=>{try{recognition.stop();}catch{};res(final.trim());},timeout);
+  });
+}
+function extractArea(text){
+  text=text.toLowerCase();
+  for(const a of AREAS) if(text.includes(a)) return a;
+  const match=text.match(/in\s+([a-z]+)/i);
+  return match?match[1]:"";
+}
+
+/*---------------------------------------------
+  MAIN FLOW
+---------------------------------------------*/
+async function runFlow(){
+  document.getElementById("transcript").innerHTML="";
+  const s=document.getElementById("status");
+  s.textContent="Listening…";
+  const state={symptoms:"",specialist:"",wantBooking:false,mode:"",datetime:"",area:"",packages:[],accountName:ACCOUNT.name,accountPhone:ACCOUNT.phone};
+
+  // 1️⃣ Symptoms
+  await speak("Hi, I’m Asha. How are you feeling? Please tell me your symptoms.");
+  const sym=await listenOnce();state.symptoms=sym;append("You: "+sym);
+  state.specialist=detectSpecialist(sym);await speak(`Hmm, sounds like you may need a ${state.specialist}.`);
+
+  // 2️⃣ Want booking?
+  await speak("Would you like me to help book an appointment?");
+  const want=await listenOnce();append("You: "+want);
+  state.wantBooking=containsYes(want);
+
+  if(!state.wantBooking){
+    await speak("Alright, I’ll just show you the best doctors based on your symptoms.");
+    redirect(state);
+    return;
+  }
+  await speak("Okay, your account information will be considered for booking.");
+
+  // 3️⃣ Appointment mode
+  await speak("Do you prefer a physical appointment or a video consultation?");
+  const modeAns=await listenOnce();append("You: "+modeAns);
+  state.mode=/video|online|virtual/i.test(modeAns)?"video":"physical";
+  await speak(`${state.mode==="video"?"Video consultation":"Physical appointment"} — got it.`);
+
+  // 4️⃣ Time and area
+  if(state.mode==="physical"){
+    await speak("When and where would you like the appointment? For example, tomorrow morning in Koramangala.");
+    const dt=await listenOnce();append("You: "+dt);
+    state.datetime=dt;
+    state.area=extractArea(dt);
+  }else{
+    await speak("When would you like the video consultation?");
+    const dt=await listenOnce();append("You: "+dt);
+    state.datetime=dt;
+  }
+
+  // 5️⃣ Health package
+  await speak("Would you like to include a health package?");
+  const pkgAns=await listenOnce();append("You: "+pkgAns);
+  if(containsYes(pkgAns)){
+    state.packages=PACKAGES[state.specialist]||PACKAGES["General Physician"];
+    await speak(`Great, I’ll suggest options like ${state.packages.slice(0,2).join(" and ")}.`);
+  }else{
+    await speak("No problem, we’ll skip packages.");
+  }
+
+  // ✅ Done — redirect to doctors
+  await speak("Showing you the doctors now.");
+  redirect(state);
+}
+
+function redirect(state){
+  const params=new URLSearchParams({
+    symptoms:state.symptoms,
+    specialist:state.specialist,
+    wantBooking:state.wantBooking,
+    mode:state.mode,
+    datetime:state.datetime,
+    area:state.area,
+    packages:(state.packages||[]).join(","),
+    accountName:state.accountName,
+    accountPhone:state.accountPhone
+  });
+  setTimeout(()=>window.location.href="doctors.html?"+params.toString(),700);
+}
+
+/*---------------------------------------------
+  BUTTONS
+---------------------------------------------*/
+document.getElementById("startBtn").onclick=()=>{speechSynthesis.cancel();runFlow();};
+document.getElementById("stopBtn").onclick=()=>{speechSynthesis.cancel();try{recognition.stop();}catch{};document.getElementById("status").textContent="Stopped.";};
+document.getElementById("pauseBtn").onclick=()=>{speechSynthesis.cancel();if(lastQuestion)speak("Let me repeat that. "+lastQuestion);};
+document.getElementById("bandhuBtn").onclick=()=>location.href="bandhu.html";
+</script>
+</body>
+</html>
