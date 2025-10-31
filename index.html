@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Asha — Voice Health Assistant (Enhanced)</title>
+<title>Asha — Voice Health Assistant (Final Fixed)</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
   body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;padding:2rem;color:#122}
@@ -56,15 +56,18 @@ const AREAS = ["indiranagar","koramangala","whitefield","jayanagar","hsr","btm",
 /*---------------------------------------------
   SPEECH UTILITIES
 ---------------------------------------------*/
-let lastQuestion = "";
-let recognition, recognizing = false;
+let recognition, lastQuestion = "", resumeStep = null;
+
 function append(t){ 
   const el=document.getElementById("transcript");
   if(el.innerHTML.includes("<em>")) el.innerHTML="";
   el.innerHTML += `<div>${t}</div>`;
   el.scrollTop = el.scrollHeight;
 }
-function containsYes(t){return /\b(yes|yeah|yep|sure|ok|okay|please)\b/i.test(t);}
+
+function saidYes(t){return /\b(yes|yeah|yep|sure|please|ok|okay)\b/i.test(t);}
+function saidNo(t){return /\b(no|nah|nope|not really)\b/i.test(t);}
+
 function detectSpecialist(t){
   t=t.toLowerCase();let top="General Physician",best=0;
   for(const s in SPECIALTIES){
@@ -72,6 +75,7 @@ function detectSpecialist(t){
     if(c>best){best=c;top=s;}
   }return top;
 }
+
 async function voicesReady(){return new Promise(r=>{if(speechSynthesis.getVoices().length)r();else speechSynthesis.onvoiceschanged=r;});}
 async function speak(txt){
   await voicesReady();
@@ -85,6 +89,7 @@ async function speak(txt){
     speechSynthesis.cancel();speechSynthesis.speak(u);
   });
 }
+
 function listenOnce(timeout=10000){
   return new Promise(res=>{
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -92,20 +97,19 @@ function listenOnce(timeout=10000){
     recognition = new SR();
     recognition.lang="en-IN";
     recognition.interimResults=true;
-    recognition.continuous=false;
-    let final="";
-    recognition.onresult=e=>{
-      for(let i=e.resultIndex;i<e.results.length;++i){
-        const tr=e.results[i][0].transcript;
-        if(e.results[i].isFinal) final=tr;
+    let buffer="";
+    recognition.onresult = e=>{
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        buffer += " "+e.results[i][0].transcript;
       }
     };
-    recognition.onend=()=>res(final.trim());
-    recognition.onerror=()=>res(final.trim());
+    recognition.onend = ()=>res(buffer.trim());
+    recognition.onerror = ()=>res(buffer.trim());
     recognition.start();
-    setTimeout(()=>{try{recognition.stop();}catch{};res(final.trim());},timeout);
+    setTimeout(()=>{try{recognition.stop();}catch{};res(buffer.trim());},timeout);
   });
 }
+
 function extractArea(text){
   text=text.toLowerCase();
   for(const a of AREAS) if(text.includes(a)) return a;
@@ -119,80 +123,119 @@ function extractArea(text){
 async function runFlow(){
   document.getElementById("transcript").innerHTML="";
   const s=document.getElementById("status");
-  s.textContent="Listening…";
-  const state={symptoms:"",specialist:"",wantBooking:false,mode:"",datetime:"",area:"",packages:[],accountName:ACCOUNT.name,accountPhone:ACCOUNT.phone};
+  const state={};
+  await step1();
 
-  // 1️⃣ Symptoms
-  await speak("Hi, I’m Asha. How are you feeling? Please tell me your symptoms.");
-  const sym=await listenOnce();state.symptoms=sym;append("You: "+sym);
-  state.specialist=detectSpecialist(sym);await speak(`Hmm, sounds like you may need a ${state.specialist}.`);
+  // STEP 1: Symptoms
+  async function step1(){
+    resumeStep = step1;
+    lastQuestion = "How are you feeling? Please tell me your symptoms.";
+    await speak("Hi, I’m Asha. "+lastQuestion);
+    const sym=await listenOnce();
+    append("You: "+sym);
+    state.symptoms=sym;
+    state.specialist=detectSpecialist(sym);
+    await speak(`It sounds like you may need a ${state.specialist}.`);
+    await step2();
+  }
 
-  // 2️⃣ Want booking?
-  await speak("Would you like me to help book an appointment?");
-  const want=await listenOnce();append("You: "+want);
-  state.wantBooking=containsYes(want);
+  // STEP 2: Booking yes/no
+  async function step2(){
+    resumeStep = step2;
+    lastQuestion = "Would you like me to help book an appointment?";
+    await speak(lastQuestion);
+    const ans = await listenOnce();
+    append("You: "+ans);
+    if(saidYes(ans)){
+      state.wantBooking=true;
+      await speak("Okay, your account information will be considered for booking.");
+      await step3();
+    }else if(saidNo(ans)){
+      state.wantBooking=false;
+      await speak("Alright, I’ll just show you the best doctors based on your symptoms.");
+      redirect(state);
+    }else{
+      await speak("Sorry, I didn’t catch that. Please say yes or no.");
+      await step2();
+    }
+  }
 
-  if(!state.wantBooking){
-    await speak("Alright, I’ll just show you the best doctors based on your symptoms.");
+  // STEP 3: Mode
+  async function step3(){
+    resumeStep = step3;
+    lastQuestion = "Do you prefer a physical appointment or a video consultation?";
+    await speak(lastQuestion);
+    const ans = await listenOnce();
+    append("You: "+ans);
+    state.mode=/video|online|virtual/i.test(ans)?"video":"physical";
+    await speak(`${state.mode==="video"?"Video consultation":"Physical appointment"} noted.`);
+    await step4();
+  }
+
+  // STEP 4: When & where
+  async function step4(){
+    resumeStep = step4;
+    if(state.mode==="physical"){
+      lastQuestion="When and where would you like the appointment? For example, tomorrow morning in Koramangala.";
+      await speak(lastQuestion);
+      const ans=await listenOnce();
+      append("You: "+ans);
+      state.datetime=ans;
+      state.area=extractArea(ans);
+    }else{
+      lastQuestion="When would you like the video consultation?";
+      await speak(lastQuestion);
+      const ans=await listenOnce();
+      append("You: "+ans);
+      state.datetime=ans;
+    }
+    await step5();
+  }
+
+  // STEP 5: Health package
+  async function step5(){
+    resumeStep = step5;
+    lastQuestion="Would you like to include a health package?";
+    await speak(lastQuestion);
+    const ans=await listenOnce();
+    append("You: "+ans);
+    if(saidYes(ans)){
+      state.packages=PACKAGES[state.specialist]||PACKAGES["General Physician"];
+      await speak(`Great, I’ll suggest ${state.packages.slice(0,2).join(" and ")}.`);
+    }else if(saidNo(ans)){
+      state.packages=[];
+      await speak("No problem, we’ll skip packages.");
+    }else{
+      await speak("Sorry, please say yes or no.");
+      await step5();
+      return;
+    }
+    await speak("Showing you the doctors now.");
     redirect(state);
-    return;
   }
-  await speak("Okay, your account information will be considered for booking.");
-
-  // 3️⃣ Appointment mode
-  await speak("Do you prefer a physical appointment or a video consultation?");
-  const modeAns=await listenOnce();append("You: "+modeAns);
-  state.mode=/video|online|virtual/i.test(modeAns)?"video":"physical";
-  await speak(`${state.mode==="video"?"Video consultation":"Physical appointment"} — got it.`);
-
-  // 4️⃣ Time and area
-  if(state.mode==="physical"){
-    await speak("When and where would you like the appointment? For example, tomorrow morning in Koramangala.");
-    const dt=await listenOnce();append("You: "+dt);
-    state.datetime=dt;
-    state.area=extractArea(dt);
-  }else{
-    await speak("When would you like the video consultation?");
-    const dt=await listenOnce();append("You: "+dt);
-    state.datetime=dt;
-  }
-
-  // 5️⃣ Health package
-  await speak("Would you like to include a health package?");
-  const pkgAns=await listenOnce();append("You: "+pkgAns);
-  if(containsYes(pkgAns)){
-    state.packages=PACKAGES[state.specialist]||PACKAGES["General Physician"];
-    await speak(`Great, I’ll suggest options like ${state.packages.slice(0,2).join(" and ")}.`);
-  }else{
-    await speak("No problem, we’ll skip packages.");
-  }
-
-  // ✅ Done — redirect to doctors
-  await speak("Showing you the doctors now.");
-  redirect(state);
 }
 
+/*---------------------------------------------
+  REDIRECT + BUTTONS
+---------------------------------------------*/
 function redirect(state){
   const params=new URLSearchParams({
-    symptoms:state.symptoms,
-    specialist:state.specialist,
-    wantBooking:state.wantBooking,
-    mode:state.mode,
-    datetime:state.datetime,
-    area:state.area,
+    symptoms:state.symptoms||"",
+    specialist:state.specialist||"",
+    wantBooking:state.wantBooking?"true":"false",
+    mode:state.mode||"",
+    datetime:state.datetime||"",
+    area:state.area||"",
     packages:(state.packages||[]).join(","),
-    accountName:state.accountName,
-    accountPhone:state.accountPhone
+    accountName:"LoggedIn User",
+    accountPhone:"9999999999"
   });
   setTimeout(()=>window.location.href="doctors.html?"+params.toString(),700);
 }
 
-/*---------------------------------------------
-  BUTTONS
----------------------------------------------*/
 document.getElementById("startBtn").onclick=()=>{speechSynthesis.cancel();runFlow();};
 document.getElementById("stopBtn").onclick=()=>{speechSynthesis.cancel();try{recognition.stop();}catch{};document.getElementById("status").textContent="Stopped.";};
-document.getElementById("pauseBtn").onclick=()=>{speechSynthesis.cancel();if(lastQuestion)speak("Let me repeat that. "+lastQuestion);};
+document.getElementById("pauseBtn").onclick=()=>{speechSynthesis.cancel();if(typeof resumeStep==="function"){speak("Let me repeat that.");resumeStep();}};
 document.getElementById("bandhuBtn").onclick=()=>location.href="bandhu.html";
 </script>
 </body>
