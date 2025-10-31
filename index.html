@@ -1,1379 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Practo - Healthcare at your fingertips</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f8f9fa;
-        }
-
-        /* Header */
-        .header {
-            background: #1c8b8f;
-            color: white;
-            padding: 16px 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        .back-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        /* Homepage */
-        .homepage {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            min-height: calc(100vh - 70px);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .homepage-header {
-            text-align: center;
-            color: white;
-            margin-bottom: 50px;
-        }
-
-        .homepage-header h2 {
-            font-size: 42px;
-            margin-bottom: 16px;
-            font-weight: 700;
-        }
-
-        .homepage-header p {
-            font-size: 20px;
-            opacity: 0.95;
-        }
-
-        .assistant-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-            max-width: 800px;
-            width: 100%;
-        }
-
-        .assistant-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-        }
-
-        .assistant-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.25);
-        }
-
-        .assistant-icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-        }
-
-        .assistant-card.bandhu .assistant-icon {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .assistant-card h3 {
-            font-size: 28px;
-            color: #2c3e50;
-            margin-bottom: 12px;
-        }
-
-        .assistant-card p {
-            font-size: 16px;
-            color: #6c757d;
-            line-height: 1.6;
-        }
-
-        /* Conversation UI */
-        .conversation-screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: calc(100vh - 70px);
-            padding: 40px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .conversation-container {
-            text-align: center;
-            color: white;
-            max-width: 500px;
-        }
-
-        .agent-name {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 40px;
-        }
-
-        .mic-animation {
-            width: 200px;
-            height: 200px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 30px;
-            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-            animation: pulse 2s infinite;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .mic-animation:hover {
-            transform: scale(1.05);
-        }
-
-        .mic-animation.listening {
-            animation: pulse 1s infinite, glow 1.5s infinite;
-        }
-
-        .mic-animation svg {
-            width: 80px;
-            height: 80px;
-            fill: #667eea;
-        }
-
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 30px rgba(255, 255, 255, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-            }
-        }
-
-        @keyframes glow {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
-            }
-        }
-
-        .status-text {
-            font-size: 24px;
-            margin-top: 20px;
-            opacity: 0.9;
-        }
-
-        .transcript-box {
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            max-width: 400px;
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 14px;
-            text-align: left;
-        }
-
-        .end-call-btn {
-            margin-top: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
-            padding: 12px 32px;
-            font-size: 18px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .end-call-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Doctor List Screen */
-        .doctor-screen {
-            display: none;
-            min-height: calc(100vh - 70px);
-            padding: 30px 20px;
-            background: #f8f9fa;
-        }
-
-        .doctor-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .banner h3 {
-            font-size: 22px;
-            margin-bottom: 8px;
-        }
-
-        .section-title {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-
-        .doctor-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .doctor-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .doctor-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-
-        .doctor-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .doctor-avatar {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 28px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .doctor-info h3 {
-            font-size: 20px;
-            color: #2c3e50;
-            margin-bottom: 4px;
-        }
-
-        .specialty {
-            color: #1c8b8f;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .doctor-details {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .detail-label {
-            color: #6c757d;
-        }
-
-        .detail-value {
-            color: #2c3e50;
-            font-weight: 500;
-        }
-
-        .rating {
-            color: #ffc107;
-            font-weight: 600;
-        }
-
-        .book-btn {
-            width: 100%;
-            margin-top: 16px;
-            background: #1c8b8f;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .book-btn:hover {
-            background: #157276;
-        }
-
-        /* Booking Screen */
-        .booking-screen {
-            display: none;
-            min-height: calc(100vh - 70px);
-            padding: 40px 20px;
-            background: #f8f9fa;
-        }
-
-        .booking-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-        }
-
-        .booking-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .booking-header h2 {
-            font-size: 32px;
-            color: #2c3e50;
-            margin-bottom: 12px;
-        }
-
-        .booking-header p {
-            color: #6c757d;
-            font-size: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .time-slots {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-        }
-
-        .time-slot {
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .time-slot:hover {
-            border-color: #667eea;
-            background: #f0f0ff;
-        }
-
-        .time-slot.selected {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: #1c8b8f;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .submit-btn:hover {
-            background: #157276;
-        }
-
-        /* Bandhu Screen */
-        .bandhu-screen {
-            display: none;
-            min-height: calc(100vh - 70px);
-            padding: 30px 20px;
-            background: #f8f9fa;
-        }
-
-        .bandhu-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .bandhu-header {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .bandhu-header h2 {
-            font-size: 36px;
-            margin-bottom: 12px;
-        }
-
-        .filters-section {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .filters-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #6c757d;
-            margin-bottom: 6px;
-        }
-
-        .filter-group select {
-            padding: 10px;
-            border: 2px solid #e9ecef;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .helper-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .helper-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .helper-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-
-        .helper-header {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .helper-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .helper-info h3 {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 4px;
-        }
-
-        .helper-type {
-            color: #f5576c;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .helper-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .tag {
-            background: #f0f0ff;
-            color: #667eea;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .contact-btn {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .contact-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
-        }
-
-        .prefill-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            text-align: center;
-            font-size: 15px;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-
-        .prefill-banner strong {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .extracted-data-summary {
-            background: #f0f0ff;
-            border-left: 4px solid #667eea;
-            padding: 16px;
-            border-radius: 6px;
-            margin-bottom: 24px;
-        }
-
-        .extracted-data-summary h4 {
-            color: #667eea;
-            margin-bottom: 12px;
-            font-size: 16px;
-        }
-
-        .extracted-data-summary p {
-            margin: 6px 0;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-
-        .extracted-data-summary strong {
-            color: #667eea;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asha - Medical Assistant</title>
+
+  <!-- ElevenLabs Widget -->
+  <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f9f9fb;
+      color: #333;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      color: #007bff;
+      margin-bottom: 1rem;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.6rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+    #statusText {
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+    #micAnimation.listening {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: #ff4747;
+      margin: 1rem auto;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.6; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #transcriptBox {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      margin: 1rem auto;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      text-align: left;
+      display: none;
+    }
+    .hidden { display: none; }
+  </style>
 </head>
+
 <body>
-    <!-- Header -->
-    <div class="header">
-        <h1>Practo</h1>
-        <button class="back-btn hidden" id="backBtn" onclick="goHome()">← Back to Home</button>
-    </div>
+  <h1>🩺 Talk to Asha</h1>
+  <p>Hi! I’m Asha, your friendly health assistant. Click below to start talking!</p>
 
-    <!-- Screen 1: Homepage with Both Assistants -->
-    <div class="homepage" id="homepage">
-        <div class="homepage-header">
-            <h2>Your Health, Our Priority</h2>
-            <p>Choose your AI assistant to get started</p>
-        </div>
-        <div class="assistant-grid">
-            <div class="assistant-card" onclick="startAsha()">
-                <div class="assistant-icon">🩺</div>
-                <h3>Asha</h3>
-                <p>Find the right doctor based on your symptoms. Voice-enabled smart health assistant.</p>
-            </div>
-            <div class="assistant-card bandhu" onclick="showBandhu()">
-                <div class="assistant-icon">🤝</div>
-                <h3>Bandhu</h3>
-                <p>Connect with nurses and caregivers for elderly care and disability support.</p>
-            </div>
-        </div>
-    </div>
+  <button id="startBtn">🎤 Talk to Asha</button>
+  <button id="endCallBtn" class="hidden">⏹ End Call</button>
 
-    <!-- Screen 2: Conversation UI (Asha) -->
-    <div class="conversation-screen" id="conversationScreen">
-        <div class="conversation-container">
-            <div class="agent-name">Asha - Your Health Assistant</div>
-            <div class="mic-animation" id="micAnimation">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                </svg>
-            </div>
-            <div class="status-text" id="statusText">Click the microphone to start talking</div>
-            <div class="transcript-box hidden" id="transcriptBox">
-                <div id="transcriptText"></div>
-            </div>
-            <button class="end-call-btn hidden" id="endCallBtn">End Conversation</button>
-        </div>
-    </div>
+  <div id="micAnimation" class="hidden"></div>
+  <div id="statusText">Waiting to connect...</div>
 
-    <!-- Screen 3: Doctor List -->
-    <div class="doctor-screen" id="doctorScreen">
-        <div class="doctor-container">
-            <div class="banner">
-                <h3>🌟 Asha's Recommendation</h3>
-                <p>Based on your symptoms, here are the best specialists for you</p>
-            </div>
-            
-            <h2 class="section-title" id="doctorSpecialty">Specialists Near You</h2>
-            
-            <div class="doctor-grid" id="doctorGrid"></div>
-        </div>
-    </div>
+  <div id="transcriptBox">
+    <h3>Conversation Transcript:</h3>
+    <div id="transcriptText"></div>
+  </div>
 
-    <!-- Screen 4: Booking Appointment -->
-    <div class="booking-screen" id="bookingScreen">
-        <div class="booking-container">
-            <div class="booking-header">
-                <h2>Book Appointment</h2>
-                <p id="bookingDoctorName">Dr. Rajesh Kumar - Gastroenterologist</p>
-            </div>
-            
-            <form id="bookingForm">
-                <div class="form-group">
-                    <label>Patient Name *</label>
-                    <input type="text" id="patientName" placeholder="Enter your full name" required>
-                </div>
+  <script>
+    // 👇 Replace this with your actual ElevenLabs Agent ID
+    const ELEVENLABS_AGENT_ID = "YOUR_AGENT_ID_HERE";
 
-                <div class="form-group">
-                    <label>Phone Number *</label>
-                    <input type="tel" id="phoneNumber" placeholder="+91 98765 43210" required>
-                </div>
+    let conversationWidget = null;
+    let conversationTranscript = "";
 
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="email" placeholder="your.email@example.com">
-                </div>
+    // Start button logic
+    document.getElementById('startBtn').addEventListener('click', () => {
+      initElevenLabsConversation();
+    });
 
-                <div class="form-group">
-                    <label>Appointment Date *</label>
-                    <input type="date" id="appointmentDate" required>
-                </div>
+    // End button logic
+    document.getElementById('endCallBtn').addEventListener('click', () => {
+      if (conversationWidget) {
+        conversationWidget.stopSession();
+      }
+      handleConversationEnd();
+    });
 
-                <div class="form-group">
-                    <label>Preferred Time Slot *</label>
-                    <div class="time-slots" id="timeSlots">
-                        <div class="time-slot" data-time="09:00 AM">09:00 AM</div>
-                        <div class="time-slot" data-time="10:00 AM">10:00 AM</div>
-                        <div class="time-slot" data-time="11:00 AM">11:00 AM</div>
-                        <div class="time-slot" data-time="02:00 PM">02:00 PM</div>
-                        <div class="time-slot" data-time="03:00 PM">03:00 PM</div>
-                        <div class="time-slot" data-time="04:00 PM">04:00 PM</div>
-                    </div>
-                    <input type="hidden" id="selectedTime" required>
-                </div>
+    // Function to handle call end
+    function handleConversationEnd() {
+      document.getElementById('statusText').textContent = 'Call ended.';
+      document.getElementById('micAnimation').classList.remove('listening');
+      document.getElementById('endCallBtn').classList.add('hidden');
+    }
 
-                <div class="form-group">
-                    <label>Location Preference *</label>
-                    <select id="location" required>
-                        <option value="">Select location</option>
-                        <option value="indiranagar">Indiranagar Clinic</option>
-                        <option value="koramangala">Koramangala Hospital</option>
-                        <option value="whitefield">Whitefield Medical Center</option>
-                        <option value="jayanagar">Jayanagar Clinic</option>
-                    </select>
-                </div>
+    // --------------------------------------------
+    // ELEVENLABS INTEGRATION STARTS HERE
+    // --------------------------------------------
+    async function initElevenLabsConversation() {
+      const statusText = document.getElementById('statusText');
+      const micAnimation = document.getElementById('micAnimation');
+      const transcriptBox = document.getElementById('transcriptBox');
+      const transcriptText = document.getElementById('transcriptText');
+      const endCallBtn = document.getElementById('endCallBtn');
 
-                <div class="form-group">
-                    <label>Reason for Visit</label>
-                    <textarea id="reason" placeholder="Briefly describe your symptoms or reason for consultation"></textarea>
-                </div>
+      statusText.textContent = "Connecting to Asha...";
 
-                <button type="submit" class="submit-btn">Confirm Appointment</button>
-            </form>
-        </div>
-    </div>
+      // Ensure library loaded
+      if (!window.elevenlabs || typeof window.elevenlabs.Conversation !== 'function') {
+        statusText.textContent = "Loading ElevenLabs SDK...";
+        await new Promise(res => setTimeout(res, 1500));
+      }
 
-    <!-- Screen 5: Bandhu (Caregiver) Screen -->
-    <div class="bandhu-screen" id="bandhuScreen">
-        <div class="bandhu-container">
-            <div class="bandhu-header">
-                <h2>🤝 Bandhu - Care & Support Network</h2>
-                <p>Find trusted nurses and caregivers for elderly and disability support</p>
-            </div>
+      try {
+        // Initialize conversation widget
+        conversationWidget = window.elevenlabs.Conversation({
+          agentId: ELEVENLABS_AGENT_ID,
 
-            <div class="filters-section">
-                <div class="filters-title">🔍 Filter Caregivers</div>
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label>Service Type</label>
-                        <select id="serviceType" onchange="filterHelpers()">
-                            <option value="all">All Services</option>
-                            <option value="nurse">Registered Nurse</option>
-                            <option value="caregiver">Personal Caregiver</option>
-                            <option value="physiotherapist">Physiotherapist</option>
-                            <option value="companion">Companion Care</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Gender</label>
-                        <select id="gender" onchange="filterHelpers()">
-                            <option value="all">Any</option>
-                            <option value="female">Female</option>
-                            <option value="male">Male</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Availability</label>
-                        <select id="availability" onchange="filterHelpers()">
-                            <option value="all">All</option>
-                            <option value="fulltime">Full-time (24/7)</option>
-                            <option value="parttime">Part-time</option>
-                            <option value="live-in">Live-in</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Experience</label>
-                        <select id="experience" onchange="filterHelpers()">
-                            <option value="all">Any Experience</option>
-                            <option value="5+">5+ Years</option>
-                            <option value="10+">10+ Years</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+          onConnect: () => {
+            console.log("Connected to Asha ✅");
+            statusText.textContent = "🎤 Listening... Speak now!";
+            micAnimation.classList.remove('hidden');
+            micAnimation.classList.add('listening');
+            endCallBtn.classList.remove('hidden');
+            transcriptBox.style.display = "block";
+          },
 
-            <div class="helper-grid" id="helperGrid"></div>
-        </div>
-    </div>
+          onMessage: (msg) => {
+            // Both your voice and Asha's responses show here
+            const who = msg.source === 'user' ? 'You' : 'Asha';
+            const text = msg.message || msg.text || '';
+            const line = `<p><strong>${who}:</strong> ${text}</p>`;
+            transcriptText.innerHTML += line;
+            conversationTranscript += text + " ";
+          },
 
-    <script>
-        // CONFIGURATION - ADD YOUR ELEVENLABS AGENT ID HERE
-        const ELEVENLABS_AGENT_ID = 'agent_1901k8v4exkseqk9s4ts0a5ycks2';
-
-        // Doctor Database
-        const doctorDatabase = {
-            gastroenterologist: [
-                { name: 'Dr. Rajesh Kumar', specialty: 'Gastroenterologist', experience: '15 years', rating: '4.8', consultationFee: '₹800', availability: 'Available Today' },
-                { name: 'Dr. Priya Sharma', specialty: 'Gastroenterologist', experience: '12 years', rating: '4.9', consultationFee: '₹1000', availability: 'Available Tomorrow' },
-                { name: 'Dr. Amit Patel', specialty: 'Gastroenterologist', experience: '20 years', rating: '4.7', consultationFee: '₹1200', availability: 'Available Today' }
-            ],
-            cardiologist: [
-                { name: 'Dr. Sneha Reddy', specialty: 'Cardiologist', experience: '18 years', rating: '4.9', consultationFee: '₹1500', availability: 'Available Today' },
-                { name: 'Dr. Arjun Mehta', specialty: 'Cardiologist', experience: '22 years', rating: '4.8', consultationFee: '₹2000', availability: 'Available Tomorrow' },
-                { name: 'Dr. Kavita Desai', specialty: 'Cardiologist', experience: '16 years', rating: '4.7', consultationFee: '₹1800', availability: 'Available Today' }
-            ],
-            dermatologist: [
-                { name: 'Dr. Meera Singh', specialty: 'Dermatologist', experience: '10 years', rating: '4.7', consultationFee: '₹700', availability: 'Available Today' },
-                { name: 'Dr. Karthik Iyer', specialty: 'Dermatologist', experience: '14 years', rating: '4.8', consultationFee: '₹900', availability: 'Available Today' }
-            ],
-            general: [
-                { name: 'Dr. Ananya Gupta', specialty: 'General Physician', experience: '8 years', rating: '4.6', consultationFee: '₹500', availability: 'Available Now' },
-                { name: 'Dr. Vikram Joshi', specialty: 'General Physician', experience: '16 years', rating: '4.7', consultationFee: '₹600', availability: 'Available Today' }
-            ]
-        };
-
-        // Caregiver Database
-        const caregiverDatabase = [
-            { name: 'Lakshmi Devi', type: 'nurse', gender: 'female', experience: '12 years', rating: '4.9', availability: 'fulltime', skills: ['Elderly Care', 'Post-Surgery', 'Medication Management'], agency: 'CareFirst Services' },
-            { name: 'Rajesh Kumar', type: 'physiotherapist', gender: 'male', experience: '8 years', rating: '4.7', availability: 'parttime', skills: ['Stroke Recovery', 'Mobility Training'], agency: 'PhysioPlus' },
-            { name: 'Meena Nair', type: 'caregiver', gender: 'female', experience: '15 years', rating: '4.8', availability: 'live-in', skills: ['Dementia Care', 'Daily Living Support'], agency: 'ElderCare India' },
-            { name: 'Suresh Patil', type: 'companion', gender: 'male', experience: '6 years', rating: '4.6', availability: 'parttime', skills: ['Companionship', 'Light Housekeeping'], agency: 'Companion Care' },
-            { name: 'Anita Sharma', type: 'nurse', gender: 'female', experience: '10 years', rating: '4.9', availability: 'fulltime', skills: ['Diabetes Management', 'Wound Care'], agency: 'MediCare Nurses' },
-            { name: 'Prakash Reddy', type: 'caregiver', gender: 'male', experience: '14 years', rating: '4.8', availability: 'live-in', skills: ['Parkinson Care', 'Feeding Assistance'], agency: 'SeniorFirst' },
-            { name: 'Shalini Das', type: 'physiotherapist', gender: 'female', experience: '11 years', rating: '4.7', availability: 'parttime', skills: ['Joint Pain', 'Exercise Therapy'], agency: 'Rehab Experts' },
-            { name: 'Mohammed Ali', type: 'nurse', gender: 'male', experience: '16 years', rating: '4.9', availability: 'fulltime', skills: ['ICU Care', 'Ventilator Support'], agency: 'Critical Care Plus' }
-        ];
-
-        let allHelpers = [...caregiverDatabase];
-        let conversationWidget = null;
-        let selectedTimeSlot = null;
-        let currentDoctor = null;
-        let conversationTranscript = '';
-        let extractedBookingData = {
-            patientName: '',
-            phoneNumber: '',
-            date: '',
-            time: '',
-            location: '',
-            reason: ''
-        };
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            setMinDate();
-            setupTimeSlots();
-            displayHelpers(allHelpers);
-        });
-
-        function setMinDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('appointmentDate').setAttribute('min', today);
-        }
-
-        function setupTimeSlots() {
-            const slots = document.querySelectorAll('.time-slot');
-            slots.forEach(slot => {
-                slot.addEventListener('click', () => {
-                    slots.forEach(s => s.classList.remove('selected'));
-                    slot.classList.add('selected');
-                    document.getElementById('selectedTime').value = slot.dataset.time;
-                });
-            });
-        }
-
-        // Navigation
-        function goHome() {
-            document.getElementById('homepage').style.display = 'flex';
-            document.getElementById('conversationScreen').style.display = 'none';
-            document.getElementById('doctorScreen').style.display = 'none';
-            document.getElementById('bookingScreen').style.display = 'none';
-            document.getElementById('bandhuScreen').style.display = 'none';
-            document.getElementById('backBtn').classList.add('hidden');
-        }
-
-        function startAsha() {
-            document.getElementById('homepage').style.display = 'none';
-            document.getElementById('conversationScreen').style.display = 'flex';
-            document.getElementById('backBtn').classList.remove('hidden');
-            initElevenLabsConversation();
-        }
-
-        function showBandhu() {
-            document.getElementById('homepage').style.display = 'none';
-            document.getElementById('bandhuScreen').style.display = 'block';
-            document.getElementById('backBtn').classList.remove('hidden');
-        }
-
-        // ElevenLabs Integration
-        function initElevenLabsConversation() {
-            const statusText = document.getElementById('statusText');
-            const micAnimation = document.getElementById('micAnimation');
-            const endCallBtn = document.getElementById('endCallBtn');
-            const transcriptBox = document.getElementById('transcriptBox');
-            const transcriptText = document.getElementById('transcriptText');
-
-            if (ELEVENLABS_AGENT_ID === 'YOUR_AGENT_ID_HERE') {
-                statusText.textContent = '⚠️ Demo Mode: Simulating conversation...';
-                transcriptBox.classList.remove('hidden');
-                endCallBtn.classList.remove('hidden');
-                
-                // Demo simulation
-                setTimeout(() => {
-                    transcriptText.innerHTML = 'User: Hi, I have terrible heartburn<br>Asha: I understand. Can I have your name please?<br>User: My name is Rahul Kumar<br>Asha: And your phone number?<br>User: 9876543210<br>Asha: When would you like to book the appointment?<br>User: Tomorrow at 10 AM<br>Asha: Which area are you located in?<br>User: Indiranagar<br>Asha: Perfect! I recommend consulting a Gastroenterologist...';
-                    conversationTranscript = 'heartburn stomach gastro rahul kumar 9876543210 tomorrow 10 am indiranagar';
-                    
-                    // Extract demo data
-                    extractedBookingData = {
-                        patientName: 'Rahul Kumar',
-                        phoneNumber: '+91 9876543210',
-                        date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
-                        time: '10:00 AM',
-                        location: 'indiranagar',
-                        reason: 'Experiencing terrible heartburn'
-                    };
-                }, 2000);
-                
-                setTimeout(() => {
-                    handleConversationEnd();
-                }, 6000);
-                return;
-            }
-
-            // Real ElevenLabs integration
-            const script = document.createElement('script');
-            script.src = 'https://elevenlabs.io/convai-widget/index.js';
-            script.async = true;
-            
-            script.onload = () => {
-                if (window.elevenlabs) {
-                    conversationWidget = window.elevenlabs.Conversation({
-                        agentId: ELEVENLABS_AGENT_ID,
-                        onConnect: () => {
-                            statusText.textContent = '🎤 Listening... Speak now!';
-                            micAnimation.classList.add('listening');
-                            endCallBtn.classList.remove('hidden');
-                            transcriptBox.classList.remove('hidden');
-                        },
-                        onDisconnect: handleConversationEnd,
-                        onMessage: (message) => {
-                            if (message.source === 'user' || message.source === 'ai') {
-                                const speaker = message.source === 'user' ? 'You' : 'Asha';
-                                transcriptText.innerHTML += `<div><strong>${speaker}:</strong> ${message.message}</div>`;
-                                conversationTranscript += ' ' + message.message.toLowerCase();
-                                analyzeConversation(message.message);
-                            }
-                        }
-                    });
-                    
-                    conversationWidget.startSession();
-                }
-            };
-            
-            script.onerror = () => {
-                statusText.textContent = '❌ Connection failed. Showing demo...';
-                setTimeout(() => showDoctorList('gastroenterologist'), 2000);
-            };
-            
-            document.head.appendChild(script);
-        }
-
-        function analyzeConversation(text) {
-            const lowerText = text.toLowerCase();
-            
-            // Extract patient details from conversation
-            extractBookingDetails(text);
-            
-            // Keyword matching for specialties
-            if (lowerText.match(/heartburn|stomach|gastro|digest|acid|ulcer|abdomen/)) {
-                setTimeout(() => showDoctorList('gastroenterologist'), 1500);
-            } else if (lowerText.match(/heart|chest pain|cardio|blood pressure|palpitation/)) {
-                setTimeout(() => showDoctorList('cardiologist'), 1500);
-            } else if (lowerText.match(/skin|rash|acne|derma|itch|allerg/)) {
-                setTimeout(() => showDoctorList('dermatologist'), 1500);
-            } else if (lowerText.match(/recommend|specialist|doctor/)) {
-                // Check accumulated transcript for keywords
-                if (conversationTranscript.match(/heartburn|stomach|gastro/)) {
-                    setTimeout(() => showDoctorList('gastroenterologist'), 1500);
-                }
-            }
-        }
-
-        function extractBookingDetails(text) {
-            const lowerText = text.toLowerCase();
-            
-            // Extract name - look for "my name is", "I am", "this is"
-            const namePatterns = [
-                /(?:my name is|i am|this is|i'm)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-                /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})$/
-            ];
-            for (let pattern of namePatterns) {
-                const nameMatch = text.match(pattern);
-                if (nameMatch && nameMatch[1]) {
-                    extractedBookingData.patientName = nameMatch[1].trim();
-                    break;
-                }
-            }
-            
-            // Extract phone number - various formats
-            const phonePattern = /(?:phone|number|contact|mobile|call)[\s:]*(?:is|at)?[\s]*(\+?91[\s-]?)?([6-9]\d{9}|\d{10})/i;
-            const phoneMatch = text.match(phonePattern);
-            if (phoneMatch) {
-                const number = phoneMatch[2].replace(/\s/g, '');
-                extractedBookingData.phoneNumber = number.length === 10 ? '+91 ' + number : number;
-            }
-            
-            // Extract date - look for "tomorrow", "today", specific dates
-            if (lowerText.match(/\btomorrow\b/)) {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                extractedBookingData.date = tomorrow.toISOString().split('T')[0];
-            } else if (lowerText.match(/\btoday\b/)) {
-                extractedBookingData.date = new Date().toISOString().split('T')[0];
-            } else {
-                // Try to match specific dates like "15th", "December 5", "05/12/2024"
-                const datePatterns = [
-                    /(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?([A-Z][a-z]+)/i,
-                    /([A-Z][a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?/i,
-                    /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/
-                ];
-                
-                for (let pattern of datePatterns) {
-                    const dateMatch = text.match(pattern);
-                    if (dateMatch) {
-                        // Parse and set date (simplified logic)
-                        const today = new Date();
-                        if (pattern === datePatterns[2]) {
-                            // Handle DD/MM/YYYY format
-                            const day = dateMatch[1].padStart(2, '0');
-                            const month = dateMatch[2].padStart(2, '0');
-                            const year = dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3];
-                            extractedBookingData.date = `${year}-${month}-${day}`;
-                        }
-                        break;
-                    }
-                }
-            }
-            
-            // Extract time - look for AM/PM times
-            const timePatterns = [
-                /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i,
-                /(\d{1,2})\s*(?:o'clock|oclock)/i,
-                /(?:morning|afternoon|evening)/i
-            ];
-            
-            for (let pattern of timePatterns) {
-                const timeMatch = text.match(pattern);
-                if (timeMatch) {
-                    if (timeMatch[3]) { // AM/PM format
-                        const hour = timeMatch[1];
-                        const minute = timeMatch[2] || '00';
-                        const period = timeMatch[3].toUpperCase();
-                        extractedBookingData.time = `${hour}:${minute} ${period}`;
-                    } else if (lowerText.includes('morning')) {
-                        extractedBookingData.time = '09:00 AM';
-                    } else if (lowerText.includes('afternoon')) {
-                        extractedBookingData.time = '02:00 PM';
-                    } else if (lowerText.includes('evening')) {
-                        extractedBookingData.time = '05:00 PM';
-                    }
-                    break;
-                }
-            }
-            
-            // Extract location - look for area names
-            const locationKeywords = {
-                'indiranagar': 'indiranagar',
-                'koramangala': 'koramangala',
-                'whitefield': 'whitefield',
-                'jayanagar': 'jayanagar',
-                'btm': 'koramangala',
-                'hsr': 'koramangala',
-                'marathahalli': 'whitefield'
-            };
-            
-            for (let [keyword, location] of Object.entries(locationKeywords)) {
-                if (lowerText.includes(keyword)) {
-                    extractedBookingData.location = location;
-                    break;
-                }
-            }
-            
-            // Extract reason/symptoms - capture the main complaint
-            if (!extractedBookingData.reason || extractedBookingData.reason.length < text.length) {
-                // Look for symptom descriptions
-                const symptomPatterns = [
-                    /(?:having|suffering from|experiencing|have)\s+([^.,!?]+)/i,
-                    /(?:pain|ache|problem|issue)\s+(?:in|with)?\s*([^.,!?]+)/i
-                ];
-                
-                for (let pattern of symptomPatterns) {
-                    const symptomMatch = text.match(pattern);
-                    if (symptomMatch && symptomMatch[1] && symptomMatch[1].length > 5) {
-                        extractedBookingData.reason = symptomMatch[1].trim();
-                        break;
-                    }
-                }
-            }
-        }
-
-        function handleConversationEnd() {
-            document.getElementById('statusText').textContent = '✅ Finding doctors for you...';
-            document.getElementById('micAnimation').classList.remove('listening');
-            
-            // Analyze full transcript
-            if (conversationTranscript.match(/heartburn|stomach|gastro/)) {
-                setTimeout(() => showDoctorList('gastroenterologist'), 1500);
-            } else if (conversationTranscript.match(/heart|chest|cardio/)) {
-                setTimeout(() => showDoctorList('cardiologist'), 1500);
-            } else if (conversationTranscript.match(/skin|rash|derma/)) {
-                setTimeout(() => showDoctorList('dermatologist'), 1500);
-            } else {
-                setTimeout(() => showDoctorList('general'), 1500);
-            }
-        }
-
-        document.getElementById('endCallBtn').addEventListener('click', () => {
-            if (conversationWidget) {
-                conversationWidget.endSession();
-            }
+          onDisconnect: () => {
+            console.log("Asha disconnected ❌");
             handleConversationEnd();
+          }
         });
 
-        // Show Doctor List
-        function showDoctorList(specialty) {
-            document.getElementById('conversationScreen').style.display = 'none';
-            document.getElementById('doctorScreen').style.display = 'block';
-            
-            const doctors = doctorDatabase[specialty] || doctorDatabase.general;
-            const specialtyNames = {
-                gastroenterologist: 'Gastroenterologists',
-                cardiologist: 'Cardiologists',
-                dermatologist: 'Dermatologists',
-                general: 'General Physicians'
-            };
-            
-            document.getElementById('doctorSpecialty').textContent = `${specialtyNames[specialty]} Near You`;
-            
-            const doctorGrid = document.getElementById('doctorGrid');
-            doctorGrid.innerHTML = '';
-            
-            doctors.forEach(doctor => {
-                const initials = doctor.name.split(' ').map(n => n[0]).join('');
-                const card = document.createElement('div');
-                card.className = 'doctor-card';
-                card.innerHTML = `
-                    <div class="doctor-header">
-                        <div class="doctor-avatar">${initials}</div>
-                        <div class="doctor-info">
-                            <h3>${doctor.name}</h3>
-                            <div class="specialty">${doctor.specialty}</div>
-                        </div>
-                    </div>
-                    <div class="doctor-details">
-                        <div class="detail-row">
-                            <span class="detail-label">Experience</span>
-                            <span class="detail-value">${doctor.experience}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Rating</span>
-                            <span class="detail-value rating">⭐ ${doctor.rating}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Consultation Fee</span>
-                            <span class="detail-value">${doctor.consultationFee}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Availability</span>
-                            <span class="detail-value" style="color: #28a745;">${doctor.availability}</span>
-                        </div>
-                    </div>
-                    <button class="book-btn" onclick='bookAppointment(${JSON.stringify(doctor)})'>Book Appointment</button>
-                `;
-                doctorGrid.appendChild(card);
-            });
-        }
-
-        // Book Appointment
-        function bookAppointment(doctor) {
-            currentDoctor = doctor;
-            document.getElementById('doctorScreen').style.display = 'none';
-            document.getElementById('bookingScreen').style.display = 'block';
-            document.getElementById('bookingDoctorName').textContent = `${doctor.name} - ${doctor.specialty}`;
-            
-            // Pre-fill form with extracted data from voice conversation
-            if (extractedBookingData.patientName) {
-                document.getElementById('patientName').value = extractedBookingData.patientName;
-            }
-            if (extractedBookingData.phoneNumber) {
-                document.getElementById('phoneNumber').value = extractedBookingData.phoneNumber;
-            }
-            if (extractedBookingData.date) {
-                document.getElementById('appointmentDate').value = extractedBookingData.date;
-            }
-            if (extractedBookingData.time) {
-                document.getElementById('selectedTime').value = extractedBookingData.time;
-                // Highlight the matching time slot if it exists
-                const slots = document.querySelectorAll('.time-slot');
-                slots.forEach(slot => {
-                    if (slot.dataset.time === extractedBookingData.time) {
-                        slot.classList.add('selected');
-                    }
-                });
-            }
-            if (extractedBookingData.location) {
-                document.getElementById('location').value = extractedBookingData.location;
-            }
-            if (extractedBookingData.reason) {
-                document.getElementById('reason').value = extractedBookingData.reason;
-            }
-            
-            // Add a notification banner if data was pre-filled
-            if (extractedBookingData.patientName || extractedBookingData.phoneNumber) {
-                const bookingContainer = document.querySelector('.booking-container');
-                const existingBanner = bookingContainer.querySelector('.prefill-banner');
-                if (!existingBanner) {
-                    const banner = document.createElement('div');
-                    banner.className = 'prefill-banner';
-                    banner.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 14px;';
-                    banner.innerHTML = '✨ We\'ve pre-filled your details from the conversation. Please verify and update if needed.';
-                    bookingContainer.insertBefore(banner, bookingContainer.firstChild);
-                }
-            }
-        }
-
-        document.getElementById('bookingForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const data = {
-                doctor: currentDoctor.name,
-                patientName: document.getElementById('patientName').value,
-                phone: document.getElementById('phoneNumber').value,
-                email: document.getElementById('email').value,
-                date: document.getElementById('appointmentDate').value,
-                time: document.getElementById('selectedTime').value,
-                location: document.getElementById('location').options[document.getElementById('location').selectedIndex].text,
-                reason: document.getElementById('reason').value
-            };
-            
-            alert(`✅ Appointment Confirmed!\n\nDoctor: ${data.doctor}\nDate: ${data.date}\nTime: ${data.time}\nLocation: ${data.location}\n\nYou will receive a confirmation SMS shortly.`);
-            
-            // Reset and go home
-            document.getElementById('bookingForm').reset();
-            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-            goHome();
-        });
-
-        // Bandhu Functions
-        function displayHelpers(helpers) {
-            const helperGrid = document.getElementById('helperGrid');
-            helperGrid.innerHTML = '';
-            
-            helpers.forEach(helper => {
-                const initials = helper.name.split(' ').map(n => n[0]).join('');
-                const card = document.createElement('div');
-                card.className = 'helper-card';
-                card.innerHTML = `
-                    <div class="helper-header">
-                        <div class="helper-avatar">${initials}</div>
-                        <div class="helper-info">
-                            <h3>${helper.name}</h3>
-                            <div class="helper-type">${helper.type.charAt(0).toUpperCase() + helper.type.slice(1)}</div>
-                        </div>
-                    </div>
-                    <div class="helper-tags">
-                        ${helper.skills.map(skill => `<span class="tag">${skill}</span>`).join('')}
-                    </div>
-                    <div class="doctor-details">
-                        <div class="detail-row">
-                            <span class="detail-label">Experience</span>
-                            <span class="detail-value">${helper.experience}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Rating</span>
-                            <span class="detail-value rating">⭐ ${helper.rating}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Availability</span>
-                            <span class="detail-value">${helper.availability}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Agency</span>
-                            <span class="detail-value">${helper.agency}</span>
-                        </div>
-                    </div>
-                    <button class="contact-btn" onclick="contactHelper('${helper.name}')">Contact Now</button>
-                `;
-                helperGrid.appendChild(card);
-            });
-        }
-
-        function filterHelpers() {
-            const serviceType = document.getElementById('serviceType').value;
-            const gender = document.getElementById('gender').value;
-            const availability = document.getElementById('availability').value;
-            const experience = document.getElementById('experience').value;
-            
-            let filtered = [...caregiverDatabase];
-            
-            if (serviceType !== 'all') {
-                filtered = filtered.filter(h => h.type === serviceType);
-            }
-            if (gender !== 'all') {
-                filtered = filtered.filter(h => h.gender === gender);
-            }
-            if (availability !== 'all') {
-                filtered = filtered.filter(h => h.availability === availability);
-            }
-            if (experience === '5+') {
-                filtered = filtered.filter(h => parseInt(h.experience) >= 5);
-            } else if (experience === '10+') {
-                filtered = filtered.filter(h => parseInt(h.experience) >= 10);
-            }
-            
-            displayHelpers(filtered);
-        }
-
-        function contactHelper(name) {
-            alert(`📞 Connecting you with ${name}...\n\nOur team will contact you within 2 hours to arrange the service.`);
-        }
-    </script>
+        // Start session (prompts mic access)
+        await conversationWidget.startSession();
+      } catch (err) {
+        console.error("Error connecting:", err);
+        statusText.textContent = "❌ Could not connect. Check Agent ID or domain allowlist.";
+      }
+    }
+  </script>
 </body>
 </html>
