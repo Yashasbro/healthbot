@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Available Doctors</title>
+<style>
+ body{font-family:'Poppins',sans-serif;background:#f9f9fb;text-align:center;padding:2rem}
+ .card{background:#fff;padding:1rem;margin:1rem auto;max-width:400px;border-radius:10px;box-shadow:0 0 8px rgba(0,0,0,0.1)}
+ button{background:#007bff;color:#fff;border:none;padding:0.6rem 1.2rem;border-radius:8px;cursor:pointer}
+ button:hover{background:#0056b3}
+</style>
+</head>
+<body>
+ <h1>👩‍⚕️ Doctors Recommended for You</h1>
+ <div id="docList"></div>
+
+ <script>
+ const params=new URLSearchParams(location.search);
+ const specialist=params.get("specialist")||"General Physician";
+ const area=params.get("area")||"Indiranagar";
+ const name=params.get("name")||"";
+ const date=params.get("date")||"";
+ const time=params.get("time")||"";
+ const phone=params.get("phone")||"";
+
+ const doctors={
+   Cardiologist:["Dr Ananya Rao","Dr Rohan Menon"],
+   Dermatologist:["Dr Sneha Patil","Dr Kiran Das"],
+   Gastroenterologist:["Dr Ravi Sharma","Dr Leena George"],
+   "General Physician":["Dr Meera Iyer","Dr Arjun Desai"]
+ };
+
+ const list=document.getElementById("docList");
+ (doctors[specialist]||[]).forEach(d=>{
+   const c=document.createElement("div");
+   c.className="card";
+   c.innerHTML=`<h3>${d}</h3><p>${specialist} | ${area}</p>
+   <button onclick="book('${d}')">Book Appointment</button>`;
+   list.appendChild(c);
+ });
+
+ function book(doc){
+   const q=new URLSearchParams({specialist,area,doc,name,date,time,phone}).toString();
+   location.href="book.html?"+q;
+ }
+ </script>
+</body>
+</html>
