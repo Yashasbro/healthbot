@@ -1,20 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Asha - Health Voice Bot</title>
-<style>
-  body{font-family:'Poppins',sans-serif;background:#f9f9fb;color:#333;text-align:center;padding:2rem}
-  h1{color:#007bff;margin-bottom:1rem}
-  button{background:#007bff;color:white;border:none;padding:0.8rem 1.6rem;font-size:1rem;border-radius:8px;cursor:pointer;margin:0.4rem}
-  button:hover{background:#0056b3}
-  button.secondary{background:#e6eefc;color:#007bff}
-  #statusText{margin-top:1rem;font-weight:600}
-  #micAnimation.listening{width:50px;height:50px;border-radius:50%;background:#ff4747;margin:1rem auto;animation:pulse 1s infinite}
-  @keyframes pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:0.6}100%{transform:scale(1);opacity:1}}
-  #transcriptBox{background:#fff;padding:1rem;border-radius:10px;margin:1rem auto;width:90%;max-width:500px;box-shadow:0 0 8px rgba(0,0,0,0.1);text-align:left;display:none}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asha - Health Voice Bot</title>
+  <style>
+    body { font-family: 'Poppins', sans-serif; background:#f9f9fb; color:#333; text-align:center; padding:2rem; }
+    h1 { color:#007bff; margin-bottom:1rem; }
+    button { background:#007bff; color:white; border:none; padding:0.8rem 1.6rem; font-size:1rem; border-radius:8px; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    #status { margin-top:1rem; font-weight:600; }
+  </style>
 </head>
 
 <body>
@@ -22,117 +18,35 @@
   <p>Hi! I’m Asha, your friendly health assistant. Click below to start talking!</p>
 
   <button id="startBtn">🎤 Talk to Asha</button>
-  <button id="endBtn" class="secondary" style="display:none;">⏹ End Call</button>
-  <button id="openWidget" class="secondary">💬 Open Official Widget</button>
+  <div id="status">Ready.</div>
 
-  <div id="micAnimation"></div>
-  <div id="statusText">Waiting to connect...</div>
+  <!-- Hidden official ElevenLabs widget -->
+  <elevenlabs-convai
+    id="ashaWidget"
+    agent-id="agent_1901k8v4exkseqk9s4ts0a5ycks2"
+    style="display:none;">
+  </elevenlabs-convai>
 
-  <div id="transcriptBox">
-    <h3>Conversation Transcript:</h3>
-    <div id="transcriptText"></div>
-  </div>
-
-  <script>window.ELEVENLABS_WIDGET_DISABLE_AUTO_INIT = true;</script>
+  <!-- Official SDK -->
   <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
   <script>
-  const AGENT_ID = "agent_1901k8v4exkseqk9s4ts0a5ycks2";
-  let conversationWidget, transcript = "";
+    const startBtn = document.getElementById("startBtn");
+    const status = document.getElementById("status");
+    const widget = document.getElementById("ashaWidget");
 
-  async function startAsha() {
-    const s = document.getElementById("statusText");
-    const mic = document.getElementById("micAnimation");
-    const box = document.getElementById("transcriptBox");
-    const text = document.getElementById("transcriptText");
-    const endBtn = document.getElementById("endBtn");
-
-    if(!window.elevenlabs || !window.elevenlabs.Conversation){
-      s.textContent="❌ ElevenLabs SDK failed to load.";
-      return;
-    }
-
-    s.textContent="Connecting to Asha…";
-    conversationWidget = window.elevenlabs.Conversation({
-      agentId:AGENT_ID,
-      onConnect:()=>{
-        s.textContent="🎤 Listening… Speak now!";
-        mic.classList.add("listening");
-        box.style.display="block";
-        endBtn.style.display="inline-block";
-      },
-      onMessage:(msg)=>{
-        const who = msg.source==="user"?"You":"Asha";
-        const t = msg.message||msg.text||"";
-        transcript += t+" ";
-        text.innerHTML += `<p><strong>${who}:</strong> ${t}</p>`;
-      },
-      onDisconnect:()=>{
-        mic.classList.remove("listening");
-        s.textContent="Call ended.";
-        handleExtractAndRedirect(transcript);
+    startBtn.addEventListener("click", () => {
+      try {
+        status.textContent = "Connecting to Asha...";
+        // show and open the real widget popup
+        widget.style.display = "block";
+        widget.open();  // official ElevenLabs method
+        status.textContent = "🎤 Speak to Asha now!";
+      } catch (e) {
+        console.error(e);
+        status.textContent = "❌ Failed to open widget.";
       }
     });
-
-    try{await conversationWidget.startSession();}
-    catch(e){console.error(e);s.textContent="❌ Could not connect.";}
-  }
-
-  // manual end call
-  function endCall() {
-    if(conversationWidget && conversationWidget.stopSession) {
-      conversationWidget.stopSession();
-    }
-    handleExtractAndRedirect(transcript);
-  }
-
-  // keyword-based extraction
-  function handleExtractAndRedirect(t){
-    if(!t || t.length<10) {
-      alert("Conversation too short to extract details!");
-      return;
-    }
-
-    const data = {};
-    const lower = t.toLowerCase();
-
-    if(lower.includes("heart")||lower.includes("chest")) data.specialist="Cardiologist";
-    else if(lower.includes("skin")) data.specialist="Dermatologist";
-    else if(lower.includes("stomach")||lower.includes("acid")) data.specialist="Gastroenterologist";
-    else data.specialist="General Physician";
-
-    const dateMatch = t.match(/(\d{1,2}\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|tomorrow)/i);
-    if(dateMatch) data.date=dateMatch[1];
-
-    const timeMatch = t.match(/(\d{1,2}\s*(?:am|pm))/i);
-    if(timeMatch) data.time=timeMatch[1];
-
-    const areaMatch = t.match(/(indiranagar|koramangala|whitefield|jayanagar)/i);
-    if(areaMatch) data.area=areaMatch[1];
-
-    const nameMatch = t.match(/(?:my name is|i am)\s+([A-Z][a-z]+\s*[A-Z]*[a-z]*)/i);
-    if(nameMatch) data.name=nameMatch[1];
-
-    const phoneMatch = t.match(/(\d{10})/);
-    if(phoneMatch) data.phone=phoneMatch[1];
-
-    const params = new URLSearchParams(data).toString();
-    window.location.href = "doctors.html?" + params;
-  }
-
-  document.getElementById("startBtn").addEventListener("click", startAsha);
-  document.getElementById("endBtn").addEventListener("click", endCall);
-
-  document.getElementById("openWidget").addEventListener("click", ()=>{
-    const html = `
-      <!doctype html><meta charset="utf-8">
-      <title>Asha Widget</title>
-      <elevenlabs-convai agent-id="${AGENT_ID}"></elevenlabs-convai>
-      <script src="https://elevenlabs.io/convai-widget/index.js"><\/script>`;
-    const w = window.open();
-    w.document.write(html);
-    w.document.close();
-  });
   </script>
 </body>
 </html>
