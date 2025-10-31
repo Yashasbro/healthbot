@@ -23,35 +23,31 @@ button:hover{background:#004fcc;}
 <script>
 const p=new URLSearchParams(location.search);
 const spec=p.get('specialist')||'General Physician';
-const data={date:p.get('date')||'',time:p.get('time')||'',area:p.get('area')||'',package:p.get('package')||'',symptoms:p.get('symptoms')||''};
+const data={date:p.get('date'),time:p.get('time'),area:p.get('area'),package:p.get('package'),symptoms:p.get('symptoms')};
 
-const doctors={
+const docs={
 "Cardiologist":[
-{img:"https://randomuser.me/api/portraits/women/44.jpg",name:"Dr Ananya Rao",hospital:"Fortis Hospital – Indiranagar",rating:4.8,exp:"12 yrs",review:"Calm and caring approach."},
-{img:"https://randomuser.me/api/portraits/men/45.jpg",name:"Dr Rajesh Menon",hospital:"Apollo Clinic – Koramangala",rating:4.7,exp:"10 yrs",review:"Explains everything clearly."}
-],
+{img:"https://randomuser.me/api/portraits/women/44.jpg",name:"Dr Ananya Rao",hospital:"Fortis Hospital – Indiranagar",rating:4.8,exp:"12 yrs"},
+{img:"https://randomuser.me/api/portraits/men/45.jpg",name:"Dr Rajesh Menon",hospital:"Apollo Clinic – Koramangala",rating:4.7,exp:"10 yrs"}],
 "Gastroenterologist":[
-{img:"https://randomuser.me/api/portraits/men/33.jpg",name:"Dr Ravi Sharma",hospital:"Manipal Hospital – Whitefield",rating:4.6,exp:"14 yrs",review:"Expert in digestive care."},
-{img:"https://randomuser.me/api/portraits/women/55.jpg",name:"Dr Leena George",hospital:"CloudNine – Jayanagar",rating:4.9,exp:"11 yrs",review:"Very friendly and accurate diagnosis."}
-],
+{img:"https://randomuser.me/api/portraits/men/33.jpg",name:"Dr Ravi Sharma",hospital:"Manipal Hospital – Whitefield",rating:4.6,exp:"14 yrs"},
+{img:"https://randomuser.me/api/portraits/women/55.jpg",name:"Dr Leena George",hospital:"CloudNine – Jayanagar",rating:4.9,exp:"11 yrs"}],
 "General Physician":[
-{img:"https://randomuser.me/api/portraits/men/66.jpg",name:"Dr Arjun Desai",hospital:"Apollo 24×7 – Koramangala",rating:4.6,exp:"15 yrs",review:"Quick diagnosis and clear advice."},
-{img:"https://randomuser.me/api/portraits/women/68.jpg",name:"Dr Meera Iyer",hospital:"CloudNine – Whitefield",rating:4.8,exp:"10 yrs",review:"Empathetic and thorough."}
-]
+{img:"https://randomuser.me/api/portraits/men/66.jpg",name:"Dr Arjun Desai",hospital:"Apollo 24×7 – Koramangala",rating:4.6,exp:"15 yrs"},
+{img:"https://randomuser.me/api/portraits/women/68.jpg",name:"Dr Meera Iyer",hospital:"CloudNine – Whitefield",rating:4.8,exp:"10 yrs"}]
 };
-const list=doctors[spec]||doctors["General Physician"];
-const out=document.getElementById('doctors');
+const list=docs[spec]||docs["General Physician"];
+const box=document.getElementById('doctors');
 list.forEach(d=>{
- out.innerHTML+=`
- <div class="card">
-   <img src="${d.img}" alt="${d.name}">
-   <h3>${d.name}</h3>
-   <div class="meta">${spec} • ${d.exp}</div>
-   <div class="meta">${d.hospital}</div>
-   <div class="rating">⭐ ${d.rating}/5</div>
-   <div class="meta"><em>"${d.review}"</em></div>
-   <button onclick="book('${encodeURIComponent(d.name)}')">Book Appointment</button>
- </div>`;
+  box.innerHTML+=`
+  <div class="card">
+    <img src="${d.img}" alt="${d.name}">
+    <h3>${d.name}</h3>
+    <div class="meta">${spec} • ${d.exp}</div>
+    <div class="meta">${d.hospital}</div>
+    <div class="rating">⭐ ${d.rating}/5</div>
+    <button onclick="book('${encodeURIComponent(d.name)}')">Book Appointment</button>
+  </div>`;
 });
 function book(doc){
   const q=new URLSearchParams({...data,doctor:doc,specialist:spec}).toString();
