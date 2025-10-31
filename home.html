@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HealthBot Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #f8f9ff;
+  color: #1a1a1a;
+}
+
+/* Top bar */
+header {
+  background: #403ccf;
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+header .left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+header .left i {
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  padding: 6px;
+}
+header select {
+  background: transparent;
+  border: none;
+  color: white;
+  font-weight: 500;
+  font-size: 15px;
+  appearance: none;
+}
+header .right button {
+  background: #ffb100;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: #403ccf;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Search bar */
+.search-box {
+  background: white;
+  margin: 14px auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+}
+
+/* Mic section */
+.mic-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+.mic {
+  background: #403ccf;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(64,60,207,0.3);
+  cursor: pointer;
+  transition: 0.3s;
+}
+.mic:hover { transform: scale(1.05); }
+.mic i {
+  color: white;
+  font-size: 36px;
+}
+
+/* Icon grid for categories */
+.section {
+  width: 90%;
+  margin: 0 auto 40px;
+}
+.section h3 {
+  margin: 16px 0 10px;
+}
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(100px,1fr));
+  gap: 10px;
+}
+.icon-item {
+  background: white;
+  border-radius: 12px;
+  text-align: center;
+  padding: 14px 8px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: transform .2s;
+}
+.icon-item:hover { transform: translateY(-3px); }
+.icon-item i {
+  font-size: 22px;
+  color: #403ccf;
+  margin-bottom: 6px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <i class="fa fa-user"></i>
+    <select>
+      <option>Bangalore</option>
+      <option>Chennai</option>
+      <option>Hyderabad</option>
+      <option>Mumbai</option>
+    </select>
+  </div>
+  <div class="right">
+    <button>BUY Care Plan</button>
+  </div>
+</header>
+
+<div class="search-box">
+  <i class="fa fa-search"></i>
+  <input type="text" placeholder="Search for doctors, clinics, hospitals...">
+</div>
+
+<!-- 🎤 Mic -->
+<div class="mic-container">
+  <div class="mic" onclick="startVoiceFlow()">
+    <i class="fa fa-microphone"></i>
+  </div>
+</div>
+
+<!-- Categories -->
+<section class="section">
+  <h3>Find a Doctor for your Health Problem</h3>
+  <div class="icon-grid">
+    <div class="icon-item"><i class="fa fa-user-md"></i><div>General Physician</div></div>
+    <div class="icon-item"><i class="fa fa-star-of-life"></i><div>Skin & Hair</div></div>
+    <div class="icon-item"><i class="fa fa-female"></i><div>Women's Health</div></div>
+    <div class="icon-item"><i class="fa fa-tooth"></i><div>Dental Care</div></div>
+    <div class="icon-item"><i class="fa fa-baby"></i><div>Child Specialist</div></div>
+    <div class="icon-item"><i class="fa fa-ear-listen"></i><div>Ear, Nose, Throat</div></div>
+    <div class="icon-item"><i class="fa fa-heart"></i><div>Mental Wellness</div></div>
+    <div class="icon-item"><i class="fa fa-plus"></i><div>20+ More</div></div>
+  </div>
+</section>
+
+<script>
+function startVoiceFlow(){
+  // Redirect to index.html and start auto-talking once loaded
+  window.location.href = "index.html?autostart=true";
+}
+</script>
+
+</body>
+</html>
