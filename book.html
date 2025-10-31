@@ -11,7 +11,7 @@ label{display:block;margin-top:10px;color:#444;}
 input,textarea{width:100%;padding:8px;margin-top:5px;border-radius:6px;border:1px solid #ccc;}
 button{background:#0b5cff;color:#fff;border:none;padding:10px 14px;border-radius:8px;margin-top:14px;cursor:pointer;width:100%;}
 button:hover{background:#004fcc;}
-.ok{color:green;font-weight:600;margin-top:10px;}
+.ok{color:green;font-weight:600;margin-top:10px;text-align:center;}
 </style>
 </head>
 <body>
@@ -32,10 +32,10 @@ button:hover{background:#004fcc;}
 
 <script>
 const p=new URLSearchParams(location.search);
-for(const [k,v] of p.entries()){const el=document.getElementById(k);if(el)el.value=decodeURIComponent(v);}
+for(const [k,v] of p.entries()){const el=document.getElementById(k);if(el)el.value=decodeURIComponent(v||"");}
 document.getElementById('f').onsubmit=e=>{
- e.preventDefault();
- document.getElementById('msg').innerHTML='<div class="ok">🎉 Appointment confirmed! We’ll contact you soon.</div>';
+  e.preventDefault();
+  document.getElementById('msg').innerHTML='<div class="ok">🎉 Appointment confirmed! We’ll contact you soon.</div>';
 };
 </script>
 </body>
