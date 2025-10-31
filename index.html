@@ -1,32 +1,319 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asha - Health Voice Bot</title>
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f9f9fb;
-      color: #333;
-      text-align: center;
-      padding: 2rem;
-    }
-    h1 { color: #007bff; margin-bottom: 1rem; }
-    p { margin-bottom: 2rem; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Asha — Local Voice Health Assistant</title>
+<style>
+  body{font-family:Inter, system-ui, -apple-system, "Poppins", sans-serif; background:#f6f8fb; color:#111; padding:28px; text-align:center}
+  h1{color:#0b5cff}
+  #card{background:#fff;border-radius:12px;max-width:760px;margin:18px auto;padding:18px;box-shadow:0 6px 24px rgba(9,30,66,0.08);text-align:left}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+  button{background:#0b5cff;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+  button.alt{background:#e6eefc;color:#0b5cff}
+  #status{font-weight:600;margin-top:8px}
+  #transcript{background:#f8fafc;border-radius:8px;padding:10px;margin-top:12px;min-height:80px}
+  label.small{font-size:13px;color:#555}
+  .field{margin:8px 0}
+  .hint{font-size:13px;color:#666;margin-top:6px}
+  a{color:#0b5cff}
+</style>
 </head>
-
 <body>
-  <h1>🩺 Talk to Asha</h1>
-  <p>Hi! I’m Asha, your friendly health assistant. Click the blue bubble at the bottom right to start talking.</p>
+  <h1>🩺 Asha — Local Voice Health Assistant</h1>
 
-  <!-- ✅ Official ElevenLabs Conversational AI widget -->
-  <elevenlabs-convai
-    agent-id="agent_1901k8v4exkseqk9s4ts0a5ycks2">
-  </elevenlabs-convai>
+  <div id="card">
+    <p>Click <strong>Start</strong> and speak naturally when prompted. Asha will ask questions (symptoms, name, phone, preferred date/time, area) and then show doctor recommendations.</p>
 
-  <!-- ✅ Official SDK loader (required) -->
-  <script src="https://elevenlabs.io/convai-widget/index.js"></script>
+    <div class="controls">
+      <button id="startBtn">🎤 Start</button>
+      <button id="stopBtn" class="alt">⏹ Stop</button>
+      <button id="gotoDoctors" class="alt">🔍 See Doctors (manual)</button>
+    </div>
+
+    <div id="status">Status: idle</div>
+
+    <div id="transcript" aria-live="polite"><em>Transcript will appear here.</em></div>
+
+    <div class="hint">Works best in Chrome. Allow microphone access when prompted.</div>
+  </div>
+
+<script>
+/*
+  Simple browser voice assistant using Web Speech API for recognition & synthesis.
+  - Recognizer: window.SpeechRecognition or webkitSpeechRecognition
+  - Synthesizer: window.speechSynthesis
+  - Flow: greeting -> symptoms -> name -> phone -> date/time -> area -> summary + redirect to doctors.html
+*/
+
+// --- Configuration & helpers ---
+const SPECIALTY_KEYWORDS = {
+  "Cardiologist": ["heart", "chest pain", "chest", "palpitation", "bp", "blood pressure", "cardiac"],
+  "Gastroenterologist": ["stomach", "stomachache", "acid", "heartburn", "nausea", "vomit", "diarrhea", "gastric", "ulcer"],
+  "Dermatologist": ["skin", "rash", "acne", "itch", "eczema", "pimple", "psoriasis"],
+  "Neurologist": ["headache","migraine","weakness","numb","seizure","dizziness"],
+  "ENT": ["ear","nose","throat","sinus","hearing","sore throat","earache"],
+  "General Physician": ["fever","cold","cough","tired","body ache","general"]
+};
+
+function speak(text, done){
+  if (!window.speechSynthesis) { if(done) done(); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-IN';
+  u.rate = 0.95;
+  u.onend = () => { if(done) done(); };
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+function bestSpecialistFromText(text){
+  const t = text.toLowerCase();
+  const scores = {};
+  for(const spec in SPECIALTY_KEYWORDS){
+    for(const kw of SPECIALTY_KEYWORDS[spec]){
+      if(t.includes(kw)) scores[spec] = (scores[spec]||0) + 1;
+    }
+  }
+  let top = "General Physician";
+  let topScore = 0;
+  for(const s in scores) if(scores[s] > topScore){ top = s; topScore = scores[s]; }
+  return top;
+}
+
+function extractPhone(text){
+  const m = text.replace(/\D/g, '').match(/(\d{10})$/);
+  return m ? m[1] : null;
+}
+function extractName(text){
+  // simple heuristic: look for "my name is X" or "this is X" or "i am X"
+  const m = text.match(/(?:my name is|i am|this is)\s+([A-Z]?[a-z]+(?:\s+[A-Z]?[a-z]+)?)/i);
+  return m ? m[1] : null;
+}
+function extractDate(text){
+  // look for "tomorrow" or dd/mm or month names (simple)
+  if(/tomorrow/i.test(text)) return "Tomorrow";
+  const m = text.match(/(\d{1,2}(?:st|nd|rd|th)?\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*)/i);
+  if(m) return m[1];
+  const m2 = text.match(/(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/);
+  if(m2) return m2[1];
+  return null;
+}
+function extractTime(text){
+  const m = text.match(/(\d{1,2}(:\d{2})?\s*(?:am|pm))/i);
+  if(m) return m[1];
+  const m2 = text.match(/(morning|afternoon|evening|night)/i);
+  if(m2) return m2[1];
+  return null;
+}
+function extractArea(text){
+  const areas = ["indiranagar","koramangala","whitefield","jayanagar","hsr","bengaluru","bangalore"];
+  const t = text.toLowerCase();
+  for(const a of areas) if(t.includes(a)) return a;
+  return null;
+}
+
+// --- State ---
+let conversation = ""; // entire transcript
+let extracted = {
+  specialist: null, symptomText: null, name: null, phone: null, date: null, time: null, area: null
+};
+let currentStep = 0; // 0=greet,1=ask symptoms,2=ask name,3=ask phone,4=ask date/time,5=ask area,6=done
+let recognition = null;
+let isListening = false;
+
+// DOM
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const gotoBtn = document.getElementById('gotoDoctors');
+const statusEl = document.getElementById('status');
+const transcriptEl = document.getElementById('transcript');
+
+function setStatus(s){ statusEl.textContent = "Status: " + s; }
+function appendTranscript(s){ conversation += " " + s; transcriptEl.textContent = conversation.trim(); }
+
+// --- SpeechRecognition setup ---
+function createRecognizer(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition) return null;
+  const r = new SpeechRecognition();
+  r.lang = 'en-IN';
+  r.interimResults = false;
+  r.maxAlternatives = 1;
+  r.continuous = false; // we handle repeated starts
+  r.onresult = (ev) => {
+    const txt = ev.results[0][0].transcript.trim();
+    appendTranscript(txt);
+    handleSpokenText(txt);
+  };
+  r.onend = () => { isListening = false; setStatus('idle'); };
+  r.onerror = (ev) => { console.error('recognition error', ev); setStatus('recognition error: '+ev.error); isListening=false; };
+  return r;
+}
+
+// --- Conversation control ---
+function startListeningOnce(promptText, onComplete){
+  // speak the prompt, then listen once, then call onComplete(text)
+  setStatus('speaking…');
+  speak(promptText, () => {
+    // start recognition
+    if(!recognition) recognition = createRecognizer();
+    if(!recognition){ setStatus('SpeechRecognition not supported in this browser'); alert('Speech recognition not supported. Use Chrome.'); return; }
+    isListening = true;
+    setStatus('listening...');
+    recognition.onresult = (ev) => {
+      const txt = ev.results[0][0].transcript.trim();
+      appendTranscript(txt);
+      isListening = false;
+      setStatus('processing...');
+      if(onComplete) onComplete(txt);
+    };
+    recognition.onend = () => { isListening = false; setStatus('idle'); };
+    recognition.onerror = (ev)=>{ console.error(ev); setStatus('recognition error: '+ev.error); isListening=false; };
+    try { recognition.start(); } catch(e) { console.error(e); setStatus('Could not start recognition'); }
+  });
+}
+
+function handleSpokenText(text){
+  // route based on currentStep
+  if(currentStep === 0){
+    // after greeting we ask symptoms
+    currentStep = 1;
+    askSymptoms();
+    return;
+  }
+  if(currentStep === 1){
+    extracted.symptomText = (extracted.symptomText||"") + " " + text;
+    // identify specialist
+    extracted.specialist = bestSpecialistFromText(extracted.symptomText);
+    // continue to name
+    currentStep = 2;
+    askName();
+    return;
+  }
+  if(currentStep === 2){
+    const name = extractName(text);
+    if(name) extracted.name = name;
+    currentStep = 3;
+    askPhone();
+    return;
+  }
+  if(currentStep === 3){
+    const phone = extractPhone(text);
+    if(phone) extracted.phone = phone;
+    currentStep = 4;
+    askDateTime();
+    return;
+  }
+  if(currentStep === 4){
+    const date = extractDate(text);
+    const time = extractTime(text);
+    if(date) extracted.date = date;
+    if(time) extracted.time = time;
+    currentStep = 5;
+    askArea();
+    return;
+  }
+  if(currentStep === 5){
+    const area = extractArea(text);
+    if(area) extracted.area = area;
+    currentStep = 6;
+    finishConversation();
+    return;
+  }
+}
+
+// --- prompts & flow ---
+function greetAndStart(){
+  conversation = "";
+  transcriptEl.textContent = "";
+  extracted = {specialist:null,symptomText:null,name:null,phone:null,date:null,time:null,area:null};
+  currentStep = 0;
+  setStatus('starting conversation');
+  speak("Hi! I'm Asha, your health assistant. How are you feeling today?", () => {
+    // wait and then listen
+    startListeningOnce("Please tell me your symptoms in short. For example, I have stomach pain or I have a rash.", (txt) => {
+      handleSpokenText(txt);
+    });
+  });
+}
+
+function askSymptoms(){
+  startListeningOnce("Okay. Please describe your main symptoms briefly.", (txt) => {
+    handleSpokenText(txt);
+  });
+}
+
+function askName(){
+  startListeningOnce("May I have your full name please?", (txt) => {
+    handleSpokenText(txt);
+  });
+}
+
+function askPhone(){
+  startListeningOnce("What's the best phone number to reach you?", (txt) => {
+    handleSpokenText(txt);
+  });
+}
+
+function askDateTime(){
+  startListeningOnce("When would you like to schedule the appointment? You can say tomorrow, a date, or morning or evening.", (txt) => {
+    handleSpokenText(txt);
+  });
+}
+
+function askArea(){
+  startListeningOnce("Which area is most convenient for you? For example Indiranagar, Koramangala, Whitefield or Jayanagar.", (txt) => {
+    handleSpokenText(txt);
+  });
+}
+
+function finishConversation(){
+  // ensure we have a specialty at least
+  if(!extracted.specialist) extracted.specialist = bestSpecialistFromText(extracted.symptomText||"");
+  // create fallback fields
+  extracted.name = extracted.name || "Unknown";
+  // speak summary then redirect
+  const summary = `Thank you ${extracted.name}. I recommend a ${extracted.specialist}. I will show available doctors now.`;
+  speak(summary, () => {
+    // redirect to doctors page with params
+    const q = new URLSearchParams({
+      specialist: extracted.specialist,
+      area: extracted.area || "",
+      name: extracted.name || "",
+      phone: extracted.phone || "",
+      date: extracted.date || "",
+      time: extracted.time || "",
+      symptoms: extracted.symptomText || ""
+    }).toString();
+    window.location.href = "doctors.html?" + q;
+  });
+}
+
+// --- UI wiring ---
+startBtn.addEventListener('click', () => {
+  if(isListening){ setStatus('Already listening...'); return; }
+  greetAndStart();
+});
+
+stopBtn.addEventListener('click', () => {
+  if(recognition && isListening){
+    try{ recognition.stop(); }catch(e){}
+  }
+  // even if they stop early, present doctors (use whatever extracted data we have)
+  finishConversation();
+});
+
+gotoBtn.addEventListener('click', () => {
+  // manual open doctors page (no params)
+  window.location.href = "doctors.html";
+});
+
+// initial status
+if(!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)){
+  setStatus('SpeechRecognition not supported in this browser. Use Chrome on desktop or Android.');
+} else {
+  setStatus('Ready. Click Start to talk to Asha.');
+}
+</script>
 </body>
 </html>
