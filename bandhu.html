@@ -1,231 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bandhu — Nurses & Care Helpers</title>
-
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bandhu – Care Helpers</title>
 <style>
-body{
-  font-family:Poppins,sans-serif;
-  background:#f6f8fb;
-  color:#111;
-  text-align:center;
-  padding:24px;
-}
-h1{
-  color:#19a974;
-  margin-bottom:10px;
-}
-p.subtitle{
-  margin-top:0;
-  color:#444;
-  margin-bottom:20px;
-}
-.filters{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  justify-content:center;
-  margin-bottom:25px;
-}
-select,button{
-  padding:8px 12px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  font-size:15px;
-}
-button{
-  background:#19a974;
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
-  border:none;
-}
-button:hover{
-  background:#138b63;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:20px;
-  max-width:1100px;
-  margin:auto;
-}
-.card{
-  background:#fff;
-  border-radius:12px;
-  box-shadow:0 4px 16px rgba(0,0,0,0.1);
-  padding:14px;
-  text-align:left;
-  transition:transform .2s;
-}
-.card:hover{ transform:translateY(-4px); }
-.card img{
-  width:100%;
-  border-radius:10px;
-  margin-bottom:8px;
-}
-h3{ margin:6px 0;color:#19a974;}
-.meta{ color:#555;font-size:14px;margin-bottom:4px;}
-.rating{ color:#f9a825;font-weight:600;}
-button.book{
-  background:#19a974;
-  color:#fff;
-  border:none;
-  padding:8px 14px;
-  border-radius:8px;
-  cursor:pointer;
-  margin-top:8px;
-}
-button.book:hover{ background:#138b63; }
-#msgBox{
-  position:fixed;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.2);
-  display:none;
-  width:90%;
-  max-width:350px;
-}
+body{font-family:'Poppins',sans-serif;background:#f7f9fc;color:#111;margin:0;padding:24px;}
+h1{text-align:center;color:#19a974;}
+.filters{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:16px auto;}
+select,button{padding:8px 12px;border-radius:8px;border:1px solid #ccc;}
+button{background:#19a974;color:white;font-weight:600;cursor:pointer;border:none;}
+button:hover{background:#148a62;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:20px;max-width:1100px;margin:auto;}
+.card{background:white;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.08);padding:16px;text-align:left;}
+img{width:100%;border-radius:10px;}
+h3{margin:8px 0;color:#19a974;}
+.meta{font-size:14px;color:#555;margin:4px 0;}
+.rating{color:#f9a825;font-weight:600;}
 </style>
 </head>
-
 <body>
 <h1>🤝 Bandhu — Nurses & Care Helpers</h1>
-<p class="subtitle">Find verified helpers and nurses for elderly or differently-abled people. Filter by your needs below.</p>
-
 <div class="filters">
-  <select id="gender">
-    <option value="">Any Gender</option>
-    <option>Female</option>
-    <option>Male</option>
-  </select>
-  <select id="duration">
-    <option value="">Any Duration</option>
-    <option>8 Hours</option>
-    <option>12 Hours</option>
-    <option>24 Hours (Live-in)</option>
-  </select>
-  <select id="area">
-    <option value="">Any Area</option>
-    <option>Indiranagar</option>
-    <option>Koramangala</option>
-    <option>Whitefield</option>
-    <option>Jayanagar</option>
-  </select>
-  <button onclick="filter()">Apply Filters</button>
+<select id="gender"><option value="">Any Gender</option><option>Female</option><option>Male</option></select>
+<select id="duration"><option value="">Any Duration</option><option>8 Hours</option><option>12 Hours</option><option>24 Hours (Live-in)</option></select>
+<select id="area"><option value="">Any Area</option><option>Indiranagar</option><option>Koramangala</option><option>Whitefield</option><option>Jayanagar</option></select>
+<button onclick="filter()">Apply</button>
 </div>
-
 <div id="list" class="grid"></div>
 
-<!-- Booking confirmation popup -->
-<div id="msgBox">
-  <h3>Booking Confirmed ✅</h3>
-  <p id="msgText"></p>
-  <button onclick="closeMsg()">OK</button>
-</div>
-
 <script>
-// ---------------- DATA ----------------
-const helpers = [
-  {
-    img:"https://randomuser.me/api/portraits/women/47.jpg",
-    name:"Sita Devi",
-    gender:"Female",
-    duration:"8 Hours",
-    area:"Indiranagar",
-    rating:4.9,
-    exp:"6 yrs in elderly care",
-    desc:"Trained in basic nursing, elderly companionship, and meal prep."
-  },
-  {
-    img:"https://randomuser.me/api/portraits/men/49.jpg",
-    name:"Ramesh Kumar",
-    gender:"Male",
-    duration:"12 Hours",
-    area:"Koramangala",
-    rating:4.7,
-    exp:"Certified nursing assistant",
-    desc:"Specialized in post-surgery recovery and physiotherapy assistance."
-  },
-  {
-    img:"https://randomuser.me/api/portraits/women/52.jpg",
-    name:"Lakshmi Nair",
-    gender:"Female",
-    duration:"24 Hours (Live-in)",
-    area:"Whitefield",
-    rating:4.8,
-    exp:"8 yrs in full-time patient support",
-    desc:"Offers round-the-clock live-in care for seniors or bedridden patients."
-  },
-  {
-    img:"https://randomuser.me/api/portraits/men/54.jpg",
-    name:"Prakash Shetty",
-    gender:"Male",
-    duration:"8 Hours",
-    area:"Jayanagar",
-    rating:4.6,
-    exp:"Experienced disability support",
-    desc:"Assists in mobility, medication reminders, and home exercises."
-  },
-  {
-    img:"https://randomuser.me/api/portraits/women/59.jpg",
-    name:"Neha Fernandes",
-    gender:"Female",
-    duration:"12 Hours",
-    area:"Indiranagar",
-    rating:4.9,
-    exp:"7 yrs in hospice care",
-    desc:"Kind, patient and skilled in palliative and dementia care."
-  }
+const helpers=[
+{img:"https://randomuser.me/api/portraits/women/47.jpg",name:"Sita Devi",gender:"Female",duration:"8 Hours",area:"Indiranagar",rating:4.9,exp:"6 yrs",desc:"Trained in elderly care and meal prep"},
+{img:"https://randomuser.me/api/portraits/men/49.jpg",name:"Ramesh Kumar",gender:"Male",duration:"12 Hours",area:"Koramangala",rating:4.7,exp:"Certified nursing assistant",desc:"Post-surgery recovery specialist"},
+{img:"https://randomuser.me/api/portraits/women/52.jpg",name:"Lakshmi Nair",gender:"Female",duration:"24 Hours (Live-in)",area:"Whitefield",rating:4.8,exp:"8 yrs",desc:"Round-the-clock live-in care"},
+{img:"https://randomuser.me/api/portraits/men/54.jpg",name:"Prakash Shetty",gender:"Male",duration:"8 Hours",area:"Jayanagar",rating:4.6,exp:"Disability support",desc:"Mobility and medication support"}
 ];
-
-// ---------------- FUNCTIONS ----------------
-function render(list){
-  const box=document.getElementById('list');
-  box.innerHTML="";
-  if(!list.length){ box.innerHTML="<p>No helpers found matching your filters.</p>"; return;}
-  list.forEach(h=>{
-    const div=document.createElement('div');
-    div.className="card";
-    div.innerHTML=`
-      <img src="${h.img}" alt="${h.name}">
-      <h3>${h.name}</h3>
-      <div class="meta">${h.gender} • ${h.duration}</div>
-      <div class="meta">📍 ${h.area}</div>
-      <div class="meta">${h.exp}</div>
-      <div class="rating">⭐ ${h.rating}/5</div>
-      <p class="meta">${h.desc}</p>
-      <button class="book" onclick="book('${h.name}','${h.area}')">Book</button>
-    `;
-    box.appendChild(div);
-  });
+const box=document.getElementById('list');
+function render(arr){
+ box.innerHTML=arr.map(h=>`
+ <div class='card'>
+   <img src="${h.img}">
+   <h3>${h.name}</h3>
+   <div class='meta'>${h.gender} • ${h.duration}</div>
+   <div class='meta'>📍 ${h.area}</div>
+   <div class='meta'>${h.exp}</div>
+   <div class='rating'>⭐ ${h.rating}/5</div>
+   <div class='meta'>${h.desc}</div>
+   <button onclick="alert('Booking confirmed for ${h.name}!')">Book</button>
+ </div>`).join('');
 }
-
 function filter(){
-  const g=document.getElementById('gender').value;
-  const d=document.getElementById('duration').value;
-  const a=document.getElementById('area').value;
-  const filtered=helpers.filter(h=>
-    (!g || h.gender===g) &&
-    (!d || h.duration===d) &&
-    (!a || h.area===a)
-  );
-  render(filtered);
+ const g=document.getElementById('gender').value;
+ const d=document.getElementById('duration').value;
+ const a=document.getElementById('area').value;
+ render(helpers.filter(h=>
+  (!g||h.gender===g)&&(!d||h.duration===d)&&(!a||h.area===a)
+ ));
 }
-
-function book(name,area){
-  const box=document.getElementById('msgBox');
-  document.getElementById('msgText').textContent=`You have booked ${name} (${area}). Our support team will contact you shortly.`;
-  box.style.display='block';
-}
-function closeMsg(){ document.getElementById('msgBox').style.display='none'; }
-
-// initial load
 render(helpers);
 </script>
 </body>
