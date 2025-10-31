@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Asha – Health Voice Assistant</title>
 <style>
@@ -18,9 +18,9 @@ button:hover{background:#0946c1;}
 </head>
 
 <body>
-<div class="header">🩺 Asha – Voice Health Assistant</div>
+<div class="header">🩺 Asha – Your Caring Health Assistant</div>
 <div class="container">
-  <p>Hi! I’m Asha, your friendly assistant. Talk to me about how you feel, and I’ll find doctors or helpers for you.</p>
+  <p>Hi! I’m Asha, your health assistant. Just talk to me naturally — I’ll understand your problem and help you find the right doctor.</p>
   <button id="startBtn">🎤 Talk to Asha</button>
   <button id="stopBtn">⏹ Stop</button>
   <button id="bandhuBtn">🤝 Meet Bandhu (Care Helpers)</button>
@@ -45,9 +45,9 @@ const PACKAGES={
  "ENT":"👂 ENT Complete Check",
  "General Physician":"🩺 Full Body Health Package"
 };
-let recognition;
-let data={symptoms:"",specialist:"",date:"",time:"",area:"",package:"",autobook:false};
 
+let recognition;
+let data={symptoms:"",specialist:"",datetime:"",area:"",package:""};
 const transcript=document.getElementById('transcript');
 const statusBox=document.getElementById('status');
 
@@ -72,7 +72,7 @@ function listen(prompt,cb){
      transcript.innerHTML+=`<p><strong>You:</strong> ${txt}</p>`;
      cb(txt);
    };
-   recognition.onerror=()=>speak("Sorry, I couldn't hear that properly.",()=>cb(""));
+   recognition.onerror=()=>speak("Sorry, I couldn't hear that clearly.",()=>cb(""));
    recognition.start();
  });
 }
@@ -90,47 +90,43 @@ const yes=t=>/yes|yeah|ok|okay|sure/i.test(t);
 
 function start(){
  transcript.innerHTML="";
- speak("Hi! I'm Asha. How are you feeling today?",()=>askSymptoms());
+ speak("Hi there! I’m Asha. How are you feeling today?",()=>askSymptoms());
 }
 
 function askSymptoms(){
- listen("Please tell me your symptoms briefly.",t=>{
+ listen("Please tell me your symptoms in a few words, dear.",t=>{
    data.symptoms=t;
    data.specialist=getSpecialist(t);
-   speak(`I see. You might need a ${data.specialist}.`,()=>askBook());
+   speak(`I understand. It sounds like you may need a ${data.specialist}.`,()=>askBooking());
  });
 }
 
-function askBook(){
- listen("Would you like me to book an appointment for you?",t=>{
-   if(yes(t)){data.autobook=true;speak("Okay. I’ll use your account details for the booking.",()=>askDate());}
-   else speak("Alright. I hope you feel better soon!");
+function askBooking(){
+ listen("Would you like me to book a doctor appointment for you?",t=>{
+   if(yes(t)){speak("Okay, I’ll take your details from your account.",()=>askTimeAndArea());}
+   else speak("Alright, take care and rest well. I’m here whenever you need help.");
  });
 }
 
-function askDate(){
- listen("When would you like to visit the doctor?",t=>{data.date=t;askTime();});
-}
-
-function askTime(){
- listen("What time works best for you? Morning or afternoon?",t=>{data.time=t;askArea();});
-}
-
-function askArea(){
- listen("Which area is convenient for you?",t=>{data.area=t;askPackage();});
+function askTimeAndArea(){
+ listen("When and where would you prefer your appointment, like tomorrow morning in Koramangala?",t=>{
+   data.datetime=t;
+   data.area=t;
+   speak("Got it.",()=>askPackage());
+ });
 }
 
 function askPackage(){
- listen("Would you like to include a health package as well?",t=>{
+ listen("Would you like to add a small health check package for better care?",t=>{
    if(yes(t)){
      data.package=PACKAGES[data.specialist];
-     speak(`I recommend the ${data.package}.`,finish);
+     speak(`Perfect. I’ll include the ${data.package}.`,finish);
    } else finish();
  });
 }
 
 function finish(){
- speak("Thank you! Redirecting you to the available doctors.",()=>{
+ speak("All set! I’ll show you doctors you can consult now.",()=>{
    const q=new URLSearchParams(data).toString();
    window.location.href="doctors.html?"+q;
  });
