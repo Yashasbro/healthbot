@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HealthBot Home</title>
+<title>Asha Health Assistant</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -75,12 +75,12 @@ header .right button {
 .mic-container {
   display: flex;
   justify-content: center;
-  margin: 20px 0;
+  margin: 40px 0 30px;
 }
 .mic {
   background: #403ccf;
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -89,13 +89,13 @@ header .right button {
   cursor: pointer;
   transition: 0.3s;
 }
-.mic:hover { transform: scale(1.05); }
+.mic:hover { transform: scale(1.08); }
 .mic i {
   color: white;
-  font-size: 36px;
+  font-size: 40px;
 }
 
-/* Icon grid for categories */
+/* Category grid */
 .section {
   width: 90%;
   margin: 0 auto 40px;
@@ -105,14 +105,14 @@ header .right button {
 }
 .icon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(100px,1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit,minmax(110px,1fr));
+  gap: 12px;
 }
 .icon-item {
   background: white;
   border-radius: 12px;
   text-align: center;
-  padding: 14px 8px;
+  padding: 16px 8px;
   font-size: 13px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   transition: transform .2s;
@@ -142,6 +142,7 @@ header .right button {
   </div>
 </header>
 
+<!-- Search -->
 <div class="search-box">
   <i class="fa fa-search"></i>
   <input type="text" placeholder="Search for doctors, clinics, hospitals...">
@@ -171,8 +172,8 @@ header .right button {
 
 <script>
 function startVoiceFlow(){
-  // Redirect to index.html and start auto-talking once loaded
-  window.location.href = "index.html?autostart=true";
+  // Redirect to voice assistant page and trigger auto-start
+  window.location.href = "voice.html?autostart=true";
 }
 </script>
 
