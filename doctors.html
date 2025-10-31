@@ -1,62 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Available Doctors</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Doctors List</title>
 <style>
-  body{font-family:Poppins,sans-serif;background:#f6f8fb;padding:28px;color:#111;text-align:center}
-  h1{color:#0b5cff}
-  .card{background:#fff;padding:16px;border-radius:10px;max-width:620px;margin:12px auto;box-shadow:0 6px 20px rgba(9,30,66,0.06);text-align:left}
-  .docRow{display:flex;justify-content:space-between;align-items:center}
-  button{background:#0b5cff;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
-  .meta{color:#555;font-size:14px;margin-top:6px}
+body{font-family:Poppins,sans-serif;background:#f5f7fa;padding:24px;color:#111;text-align:center;}
+h1{color:#0b5cff;margin-bottom:16px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:1000px;margin:auto;}
+.card{background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.1);padding:14px;text-align:left;}
+img{width:100%;border-radius:10px;}
+h3{margin:10px 0 4px;color:#0b5cff;}
+.meta{color:#555;font-size:14px;margin-bottom:4px;}
+.rating{color:#f9a825;font-weight:600;}
+button{background:#0b5cff;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;margin-top:8px;}
+button:hover{background:#004fcc;}
 </style>
 </head>
 <body>
-  <h1>👩‍⚕️ Doctors Recommended</h1>
-  <div id="results"></div>
+<h1>👩‍⚕️ Recommended Doctors</h1>
+<div id="doctors" class="grid"></div>
 
 <script>
-const params = new URLSearchParams(location.search);
-const specialist = params.get('specialist') || 'General Physician';
-const area = params.get('area') || '';
-const name = params.get('name') || '';
-const phone = params.get('phone') || '';
-const date = params.get('date') || '';
-const time = params.get('time') || '';
-const symptoms = params.get('symptoms') || '';
+const p=new URLSearchParams(location.search);
+const spec=p.get('specialist')||'General Physician';
+const data={date:p.get('date')||'',time:p.get('time')||'',area:p.get('area')||'',package:p.get('package')||'',symptoms:p.get('symptoms')||''};
 
-const sampleDoctors = {
-  "Cardiologist": ["Dr. Ananya Rao","Dr. Rohan Menon"],
-  "Gastroenterologist": ["Dr. Ravi Sharma","Dr. Leena George"],
-  "Dermatologist": ["Dr. Sneha Patil","Dr. Kiran Das"],
-  "Neurologist": ["Dr. Suresh Iyer","Dr. Nisha Kulkarni"],
-  "ENT": ["Dr. Arjun Patel","Dr. Meera K"],
-  "General Physician": ["Dr. Meera Iyer","Dr. Arjun Desai"]
+const doctors={
+"Cardiologist":[
+{img:"https://randomuser.me/api/portraits/women/44.jpg",name:"Dr Ananya Rao",hospital:"Fortis Hospital – Indiranagar",rating:4.8,exp:"12 yrs",review:"Calm and caring approach."},
+{img:"https://randomuser.me/api/portraits/men/45.jpg",name:"Dr Rajesh Menon",hospital:"Apollo Clinic – Koramangala",rating:4.7,exp:"10 yrs",review:"Explains everything clearly."}
+],
+"Gastroenterologist":[
+{img:"https://randomuser.me/api/portraits/men/33.jpg",name:"Dr Ravi Sharma",hospital:"Manipal Hospital – Whitefield",rating:4.6,exp:"14 yrs",review:"Expert in digestive care."},
+{img:"https://randomuser.me/api/portraits/women/55.jpg",name:"Dr Leena George",hospital:"CloudNine – Jayanagar",rating:4.9,exp:"11 yrs",review:"Very friendly and accurate diagnosis."}
+],
+"General Physician":[
+{img:"https://randomuser.me/api/portraits/men/66.jpg",name:"Dr Arjun Desai",hospital:"Apollo 24×7 – Koramangala",rating:4.6,exp:"15 yrs",review:"Quick diagnosis and clear advice."},
+{img:"https://randomuser.me/api/portraits/women/68.jpg",name:"Dr Meera Iyer",hospital:"CloudNine – Whitefield",rating:4.8,exp:"10 yrs",review:"Empathetic and thorough."}
+]
 };
-
-const list = sampleDoctors[specialist] || sampleDoctors["General Physician"];
-
-const out = document.getElementById('results');
-out.innerHTML = `<div class="card"><strong>Detected specialist:</strong> ${specialist}<div class="meta">Area: ${area || 'Any'} • Symptoms: ${symptoms || 'Not provided'}</div></div>`;
-
-list.forEach(d => {
-  const c = document.createElement('div');
-  c.className = 'card';
-  c.innerHTML = `<div class="docRow"><div>
-    <h3 style="margin:0">${d}</h3>
-    <div class="meta">${specialist} • ${area || 'Various clinics'}</div>
-    </div>
-    <div><button onclick="book('${d.replace("'", '')}')">Book</button></div>
-  </div>`;
-  out.appendChild(c);
+const list=doctors[spec]||doctors["General Physician"];
+const out=document.getElementById('doctors');
+list.forEach(d=>{
+ out.innerHTML+=`
+ <div class="card">
+   <img src="${d.img}" alt="${d.name}">
+   <h3>${d.name}</h3>
+   <div class="meta">${spec} • ${d.exp}</div>
+   <div class="meta">${d.hospital}</div>
+   <div class="rating">⭐ ${d.rating}/5</div>
+   <div class="meta"><em>"${d.review}"</em></div>
+   <button onclick="book('${encodeURIComponent(d.name)}')">Book Appointment</button>
+ </div>`;
 });
-
 function book(doc){
-  const q = new URLSearchParams({
-    specialist, area, name, phone, date, time, doc, symptoms
-  }).toString();
-  window.location.href = 'book.html?' + q;
+  const q=new URLSearchParams({...data,doctor:doc,specialist:spec}).toString();
+  window.location.href='book.html?'+q;
 }
 </script>
 </body>
