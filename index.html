@@ -1,117 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Asha — Voice Health Assistant</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Asha — Health Voice Assistant</title>
 <style>
-  body{font-family:Poppins,sans-serif;background:#f6f8fb;color:#111;text-align:center;padding:28px}
-  h1{color:#0b5cff;margin-bottom:1rem;}
-  #card{background:#fff;border-radius:12px;max-width:760px;margin:0 auto;padding:20px;box-shadow:0 6px 24px rgba(9,30,66,0.08);text-align:left}
-  button{background:#0b5cff;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;margin:8px}
-  button:hover{background:#0056b3;}
-  #status{font-weight:600;margin-top:10px}
-  #transcript{background:#f8fafc;border-radius:8px;padding:12px;margin-top:12px;min-height:90px}
-  .hint{font-size:13px;color:#666;margin-top:8px}
+body { font-family:Poppins,sans-serif;background:#f6f8fb;color:#111;text-align:center;padding:28px; }
+h1 { color:#0b5cff;margin-bottom:1rem; }
+#card { background:#fff;border-radius:12px;max-width:760px;margin:0 auto;padding:20px;box-shadow:0 6px 24px rgba(9,30,66,0.08);text-align:left; }
+button { background:#0b5cff;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;margin:8px; }
+button:hover { background:#004fcc; }
+#status { font-weight:600;margin-top:10px; }
+#transcript { background:#f8fafc;border-radius:8px;padding:12px;margin-top:12px;min-height:90px; }
+.hint { font-size:13px;color:#666;margin-top:8px; }
 </style>
 </head>
+
 <body>
 <h1>🩺 Asha — Your Health Voice Assistant</h1>
 
 <div id="card">
-  <p>Speak naturally with Asha. She’ll understand your symptoms, suggest doctors and packages, and help you book easily.</p>
-  <button id="startBtn">🎤 Start</button>
+  <p>Talk naturally with Asha. She’ll understand your symptoms, suggest doctors and packages, and help you book easily.</p>
+  <button id="startBtn">🎤 Start Talking</button>
   <button id="stopBtn">⏹ Stop</button>
   <div id="status">Status: idle</div>
   <div id="transcript"><em>Transcript will appear here.</em></div>
-  <div class="hint">Best experienced in Chrome. Allow microphone when prompted.</div>
+  <div class="hint">Best used in Chrome. Allow microphone when asked.</div>
 </div>
 
 <script>
-const SPECIALTY_KEYWORDS = {
+/*------------------------
+  1. CONFIG & HELPERS
+-------------------------*/
+const SPECIALTIES = {
   "Cardiologist": ["heart","chest pain","palpitation","bp","blood pressure"],
-  "Gastroenterologist": ["stomach","acidity","heartburn","ulcer","nausea","vomit","diarrhea"],
+  "Gastroenterologist": ["stomach","acidity","heartburn","vomit","diarrhea","ulcer"],
   "Dermatologist": ["skin","rash","itch","acne","eczema"],
-  "Neurologist": ["headache","migraine","numbness","seizure"],
+  "Neurologist": ["headache","migraine","dizzy","seizure","numbness"],
   "ENT": ["ear","nose","throat","sinus","hearing"],
-  "General Physician": ["fever","cold","cough","weak","tired","body ache"]
+  "General Physician": ["fever","cold","cough","tired","body ache"]
 };
-const PACKAGE_KEYWORDS = {
-  "Cardiologist": "❤️ Cardiac Health Checkup",
-  "Gastroenterologist": "🍽️ Digestive Wellness Package",
-  "Dermatologist": "💆 Skin Care & Allergy Test",
-  "Neurologist": "🧠 Neuro Health Evaluation",
+
+const PACKAGES = {
+  "Cardiologist": "❤️ Heart Checkup Package",
+  "Gastroenterologist": "🍽️ Digestive Wellness Plan",
+  "Dermatologist": "💆 Skin & Allergy Test",
+  "Neurologist": "🧠 Neuro Health Screening",
   "ENT": "👂 ENT Complete Check",
   "General Physician": "🩺 Full Body Health Package"
 };
 
-let extracted = { specialist:null, name:null, phone:null, date:null, time:null, area:null, symptoms:null, wantAppointment:null, wantPackage:null, package:null };
+let data = { symptoms:null,specialist:null,name:null,phone:null,date:null,time:null,area:null,package:null };
 let currentStep = 0;
-let conversation = "";
-let recognition = null, isListening=false;
+let recognition, isListening=false;
+const statusEl=document.getElementById('status'), transcriptEl=document.getElementById('transcript');
 
-const statusEl = document.getElementById('status');
-const transcriptEl = document.getElementById('transcript');
-function setStatus(s){ statusEl.textContent="Status: "+s; }
-function appendTranscript(t){ conversation+=" "+t; transcriptEl.textContent=conversation.trim(); }
-
-function speak(text, next){
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang='en-IN'; u.rate=0.95; u.pitch=1.2; // softer female tone
-  u.voice = speechSynthesis.getVoices().find(v=>/female/i.test(v.name) && /en-IN|en-GB/.test(v.lang)) || null;
-  u.onend=()=>next&&next();
+/*------------------------
+  2. SPEECH FUNCTIONS
+-------------------------*/
+function speak(txt, cb){
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang='en-IN';
+  u.pitch=1.1; u.rate=0.95;
+  u.voice=speechSynthesis.getVoices().find(v=>/female/i.test(v.name) && /en-IN|en-GB|en-US/.test(v.lang)) || null;
+  u.onend=()=>cb&&cb();
   speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
+function setStatus(s){ statusEl.textContent="Status: "+s; }
+function appendTranscript(t){ transcriptEl.textContent+=(t+" "); }
 
-function createRecognizer(){
-  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ alert('Speech recognition not supported. Use Chrome.'); return null; }
-  const r=new SR();
-  r.lang='en-IN'; r.interimResults=false; r.maxAlternatives=1; r.continuous=false;
-  r.onresult=e=>{const t=e.results[0][0].transcript;appendTranscript(t);handleResponse(t);};
-  r.onerror=e=>setStatus('error: '+e.error);
-  r.onend=()=>isListening=false;
-  return r;
-}
-function listenOnce(prompt, cb){
+/*------------------------
+  3. RECOGNITION
+-------------------------*/
+function listen(prompt, cb){
   speak(prompt,()=>{
-    recognition=createRecognizer();
-    if(!recognition)return;
-    isListening=true;
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){alert("SpeechRecognition not supported. Use Chrome.");return;}
+    recognition=new SR(); recognition.lang='en-IN';
     recognition.onresult=e=>{
-      const t=e.results[0][0].transcript.trim();
-      appendTranscript(t);
-      isListening=false;
+      const t=e.results[0][0].transcript;
+      appendTranscript("\\nYou: "+t);
       cb(t);
     };
-    recognition.start();
+    recognition.onerror=e=>setStatus('error: '+e.error);
+    recognition.start(); setStatus('Listening...');
   });
 }
 
-function getSpecialist(t){t=t.toLowerCase();let s="General Physician",max=0;
-for(const sp in SPECIALTY_KEYWORDS){let c=0;for(const k of SPECIALTY_KEYWORDS[sp])if(t.includes(k))c++;if(c>max){max=c;s=sp;}}
-return s;}
-function getPhone(t){const m=t.replace(/\D/g,'').match(/(\d{10})/);return m?m[1]:null;}
-function getName(t){const m=t.match(/(?:my name is|i am|this is)\s+([A-Z]?[a-z]+(?:\s+[A-Z]?[a-z]+)?)/i);return m?m[1]:null;}
-function getDate(t){if(/tomorrow/i.test(t))return"Tomorrow";const m=t.match(/(\d{1,2}\/\d{1,2}\/?\d{0,4})/);return m?m[1]:null;}
-function getTime(t){const m=t.match(/(\d{1,2}(:\d{2})?\s*(am|pm))/i);return m?m[1]:null;}
-function getArea(t){const a=["indiranagar","koramangala","whitefield","jayanagar","hsr"];t=t.toLowerCase();for(const x of a)if(t.includes(x))return x;return null;}
-function yesNo(t){return /yes|yeah|sure|ok/i.test(t);}
-
-function startBot(){
-  conversation=""; transcriptEl.textContent=""; extracted={};
-  speak("Hi! I’m Asha, your health assistant. How are you feeling today?",()=>askSymptoms());
+/*------------------------
+  4. EXTRACTION HELPERS
+-------------------------*/
+function getSpecialist(text){
+  text=text.toLowerCase(); let best="General Physician",score=0;
+  for(const s in SPECIALTIES){let c=0;for(const k of SPECIALTIES[s])if(text.includes(k))c++;if(c>score){score=c;best=s;}}
+  return best;
 }
-function askSymptoms(){listenOnce("Please tell me your symptoms in short.",(t)=>{
-  extracted.symptoms=t; extracted.specialist=getSpecialist(t);
-  askAppointment();
-});}
-function askAppointment(){
-  listenOnce("Would you like me to help book an appointment for you?",(t)=>{
-    extracted.wantAppointment=yesNo(t);
-    if(extracted.wantAppointment) askName(); else {
-      speak("Alright! I hope you feel better soon. You can ask me anytime if you need to book an appointment.");
-    }
+const extractName=t=>(t.match(/(?:my name is|i am|this is)\s+([A-Z]?[a-z]+(?:\\s+[A-Z]?[a-z]+)?)/i)||[])[1];
+const extractPhone=t=>(t.replace(/\\D/g,'').match(/(\\d{10})/)||[])[1];
+const extractDate=t=>/tomorrow/i.test(t)?"Tomorrow":(t.match(/(\\d{1,2}\\/\\d{1,2})/)||[])[1];
+const extractTime=t=>(t.match(/(\\d{1,2}\\s*(?:am|pm))/i)||[])[1];
+const extractArea=t=>["indiranagar","koramangala","whitefield","jayanagar","hsr"].find(a=>t.toLowerCase().includes(a));
+const yes=t=>/yes|yeah|sure|ok|okay/i.test(t);
+
+/*------------------------
+  5. CONVERSATION FLOW
+-------------------------*/
+function start(){
+  data={};
+  transcriptEl.textContent=""; setStatus("Starting conversation...");
+  speak("Hi! I'm Asha, your friendly health assistant. How are you feeling today?",()=>askSymptoms());
+}
+function askSymptoms(){
+  listen("Please tell me what problems or symptoms you have.",t=>{
+    data.symptoms=t; data.specialist=getSpecialist(t);
+    appendTranscript("\\nAsha: Got it. You may need a "+data.specialist+".");
+    askToBook();
   });
 }
-function askName(){listenOnce("May I have your full name please?",(t)=>
+function askToBook(){
+  listen("Would you like me to help you book an appointment for this?",t=>{
+    if(yes(t)) askName(); else speak("Alright, I hope you feel better soon. You can always come back to me later!");
+  });
+}
+function askName(){
+  listen("May I know your full name please?",t=>{data.name=extractName(t)||t; askPhone();});
+}
+function askPhone(){
+  listen("What is the best phone number to reach you?",t=>{data.phone=extractPhone(t); askDate();});
+}
+function askDate(){
+  listen("When would you like to visit the doctor? You can say tomorrow or a date.",t=>{data.date=extractDate(t)||t; askTime();});
+}
+function askTime(){
+  listen("What time works for you? Morning or afternoon?",t=>{data.time=extractTime(t)||t; askArea();});
+}
+function askArea(){
+  listen("Which area is convenient for you? Indiranagar, Koramangala, Whitefield or Jayanagar?",t=>{data.area=extractArea(t)||t; askPackage();});
+}
+function askPackage(){
+  listen("Would you also like to add a health package for a full checkup?",t=>{
+    if(yes(t)){ data.package=PACKAGES[data.specialist]||PACKAGES["General Physician"];
+      speak("Based on your symptoms, I suggest the "+data.package+". I’ll include that too.",finish);
+    } else { data.package=null; finish(); }
+  });
+}
+function finish(){
+  speak("Thank you "+(data.name||'dear')+". Redirecting you to the doctor options now.",()=>{
+    const q=new URLSearchParams(data).toString();
+    window.location.href="doctors.html?"+q;
+  });
+}
+
+/*------------------------
+  6. BUTTON ACTIONS
+-------------------------*/
+document.getElementById('startBtn').onclick=start;
+document.getElementById('stopBtn').onclick=()=>{speak("Okay, ending the chat. Hope you feel better soon!");};
+</script>
+</body>
+</html>
