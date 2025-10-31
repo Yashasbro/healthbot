@@ -1,51 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asha - Health Voice Bot</title>
-  <style>
-    body { font-family: 'Poppins', sans-serif; background:#f9f9fb; color:#333; text-align:center; padding:2rem; }
-    h1 { color:#007bff; margin-bottom:1rem; }
-    button { background:#007bff; color:white; border:none; padding:0.8rem 1.6rem; font-size:1rem; border-radius:8px; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    #status { margin-top:1rem; font-weight:600; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Asha – Health Voice Bot</title>
+<style>
+  body{font-family:Poppins, sans-serif;text-align:center;padding:2rem;background:#f9f9fb}
+  h1{color:#007bff;margin-bottom:1rem}
+  button{background:#007bff;color:#fff;border:none;padding:0.8rem 1.6rem;
+         border-radius:8px;font-size:1rem;cursor:pointer}
+  button:hover{background:#0056b3}
+</style>
 </head>
-
 <body>
   <h1>🩺 Talk to Asha</h1>
-  <p>Hi! I’m Asha, your friendly health assistant. Click below to start talking!</p>
-
+  <p>Click below to start your voice chat.</p>
   <button id="startBtn">🎤 Talk to Asha</button>
-  <div id="status">Ready.</div>
-
-  <!-- Hidden official ElevenLabs widget -->
-  <elevenlabs-convai
-    id="ashaWidget"
-    agent-id="agent_1901k8v4exkseqk9s4ts0a5ycks2"
-    style="display:none;">
-  </elevenlabs-convai>
-
-  <!-- Official SDK -->
-  <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
   <script>
-    const startBtn = document.getElementById("startBtn");
-    const status = document.getElementById("status");
-    const widget = document.getElementById("ashaWidget");
-
-    startBtn.addEventListener("click", () => {
-      try {
-        status.textContent = "Connecting to Asha...";
-        // show and open the real widget popup
-        widget.style.display = "block";
-        widget.open();  // official ElevenLabs method
-        status.textContent = "🎤 Speak to Asha now!";
-      } catch (e) {
-        console.error(e);
-        status.textContent = "❌ Failed to open widget.";
-      }
+    document.getElementById("startBtn").addEventListener("click",()=>{
+      const popupHtml = `
+        <!doctype html><meta charset="utf-8">
+        <title>Asha – Voice Assistant</title>
+        <elevenlabs-convai agent-id="agent_1901k8v4exkseqk9s4ts0a5ycks2"></elevenlabs-convai>
+        <script src="https://elevenlabs.io/convai-widget/index.js"><\/script>`;
+      const win = window.open("", "ashaPopup", "width=400,height=600");
+      if(!win){alert("Please allow pop-ups for this site.");return;}
+      win.document.write(popupHtml);
+      win.document.close();
     });
   </script>
 </body>
