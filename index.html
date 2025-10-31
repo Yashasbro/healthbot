@@ -3,113 +3,208 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Asha — Voice Health Assistant 4.1</title>
+<title>Asha — Voice Health Assistant (final)</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;color:#122;}
-.wrap{max-width:900px;margin:36px auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(16,24,40,.06);}
-h1{margin:0 0 12px;color:#0b5cff}
-p.lead{color:#555;margin-bottom:20px}
-button{background:#0b5cff;color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;margin:4px;}
-button.alt{background:#eef6ff;color:#0b5cff;border:1px solid #d8e9ff}
-button.green{background:#19a974}
-#status{margin-top:10px;font-weight:600;}
-#transcript{margin-top:12px;background:#f6f9ff;border-radius:10px;padding:14px;min-height:100px;color:#0d1b2a;line-height:1.4}
-.small{font-size:13px;color:#6b7280;margin-top:8px}
+  :root{--blue:#0b5cff;--green:#19a974;--muted:#6b7280}
+  body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;color:#122;}
+  .wrap{max-width:920px;margin:36px auto;padding:26px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(16,24,40,.06)}
+  h1{margin:0 0 10px;color:var(--blue)}
+  .lead{color:var(--muted);margin-bottom:16px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  button{background:var(--blue);color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+  button.alt{background:#eef6ff;color:var(--blue);border:1px solid #d8e9ff}
+  button.green{background:var(--green)}
+  #status{margin-top:8px;font-weight:600}
+  #transcript{margin-top:12px;background:#f6f9ff;border-radius:10px;padding:14px;min-height:120px;color:#0d1b2a}
+  .small{font-size:13px;color:var(--muted);margin-top:8px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>🩺 Asha — Your Caring Health Assistant</h1>
-  <p class="lead">Talk naturally — Asha will softly ask up to 4 questions, suggest doctors and health packages, and book using your saved account info if you wish.</p>
-  <button id="startBtn">🎤 Talk to Asha</button>
-  <button id="stopBtn" class="alt">⏹ Stop</button>
-  <button id="bandhuBtn" class="green">🤝 Bandhu (Care Helpers)</button>
-  <div id="status">Status: Idle</div>
-  <div id="transcript"><em>Transcript appears here...</em></div>
-</div>
+  <div class="wrap">
+    <h1>🩺 Asha — Your Caring Health Assistant</h1>
+    <div class="lead">Speak naturally. Asha will ask minimal questions and show suitable doctors. If you choose to book, the booking form will be pre-filled with your account & extracted details.</div>
+
+    <div class="controls">
+      <button id="startBtn">🎤 Talk to Asha</button>
+      <button id="stopBtn" class="alt">⏹ Stop</button>
+      <button id="bandhuBtn" class="green">🤝 Bandhu (Care Helpers)</button>
+    </div>
+
+    <div id="status">Status: idle</div>
+    <div id="transcript"><em>Transcript & captured details will appear here.</em></div>
+    <div class="small">Use Chrome for best results. Allow microphone when prompted.</div>
+  </div>
 
 <script>
+/* ======= Configuration ======= */
 const SPECIALTIES = {
-  "Cardiologist": ["heart","chest","bp","pressure","palpitation"],
-  "Gastroenterologist": ["stomach","acid","vomit","indigestion","heartburn"],
-  "Dermatologist": ["skin","itch","rash","acne"],
-  "Neurologist": ["headache","migraine","dizzy","numb","memory"],
-  "ENT": ["ear","nose","throat","sinus","hearing"],
-  "General Physician": ["fever","cold","cough","body ache","weak"]
+  "Cardiologist":["heart","chest","palpitation","bp","blood pressure","chest pain"],
+  "Gastroenterologist":["stomach","acid","heartburn","nausea","indigestion","vomit","gastric"],
+  "Dermatologist":["skin","rash","itch","acne","eczema","pimple"],
+  "Neurologist":["headache","migraine","numb","seizure","dizzy"],
+  "ENT":["ear","nose","throat","sinus","hearing"],
+  "General Physician":["fever","cold","cough","body ache","weak"]
 };
+// packages per specialist (3-4 each)
 const PACKAGES = {
-  "Cardiologist": ["Heart Care Basic","Cardio Plus","Cardio Max","Heart Wellness Plan"],
-  "Gastroenterologist": ["Digestive Health","Gut Detox","Liver Check","Stomach Scan"],
-  "Dermatologist": ["Skin Glow","Allergy Test","Full Skin Check","Acne Care"],
-  "Neurologist": ["Neuro Scan","Brain Wellness","Migraine Package","Sleep Study"],
-  "ENT": ["ENT Basic","Sinus Check","Hearing Test","Throat Care"],
-  "General Physician": ["Full Body Checkup","Essential Health","Complete Wellness","Preventive Care"]
+  "Cardiologist":["Heart Basic","Cardio Advanced","Cardio Executive"],
+  "Gastroenterologist":["Digestive Basic","Gut Plus","GI Advanced"],
+  "Dermatologist":["Skin Basic","Allergy Panel","Derm Advanced"],
+  "Neurologist":["Neuro Basic","Neurology Panel","Migraine Check"],
+  "ENT":["ENT Basic","Sinus Panel","Hearing Check"],
+  "General Physician":["Full Body Basic","Complete Health","Preventive Pack"]
 };
+// dummy logged-in account info
+const ACCOUNT = { name: "LoggedIn User", phone: "9999999999" };
 
-const ACCOUNT = {name:"LoggedIn User", phone:"9999999999"};
-let recog=null;
-const transcriptEl=document.getElementById('transcript');
-const statusEl=document.getElementById('status');
+/* ======= UI refs ======= */
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const bandhuBtn = document.getElementById('bandhuBtn');
+const statusEl = document.getElementById('status');
+const transcriptEl = document.getElementById('transcript');
 
-async function speak(txt){
- return new Promise(r=>{
-   const u=new SpeechSynthesisUtterance(txt);
-   u.lang="en-IN";u.pitch=1.1;u.rate=0.95;
-   const v=speechSynthesis.getVoices().find(v=>/female/i.test(v.name)&&/en-IN|en-GB/.test(v.lang));
-   if(v)u.voice=v;
-   u.onend=r;speechSynthesis.cancel();speechSynthesis.speak(u);
-   statusEl.textContent="Asha: "+txt;
- });
+/* ======= Speech helpers ======= */
+function voicesReady(){return new Promise(res=>{const v=speechSynthesis.getVoices(); if(v.length) return res(); speechSynthesis.onvoiceschanged=()=>res(); setTimeout(res,800);} );}
+async function speak(text){
+  await voicesReady();
+  return new Promise(resolve=>{
+    try{
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-IN";
+      u.rate = 0.95;
+      u.pitch = 1.12;
+      // try pick a female en-IN voice if available
+      const v = speechSynthesis.getVoices().find(x=>/female/i.test(x.name) && /en-IN|en-GB/.test(x.lang));
+      if(v) u.voice = v;
+      u.onend = ()=>{ statusEl.textContent = "Asha: " + text; resolve(); };
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    }catch(e){
+      console.warn("speak failed",e); resolve();
+    }
+  });
 }
-function listenOnce(ms=7000){
- return new Promise(res=>{
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){res("");return;}
-  try{
-   const r=new SR();recog=r;r.lang="en-IN";r.onresult=e=>{
-     const t=e.results[0][0].transcript;append("You: "+t);res(t);
-   };
-   r.onerror=()=>res("");r.start();
-   setTimeout(()=>{try{r.stop();}catch{}res("");},ms);
-  }catch{res("");}
- });
+function listenOnce(timeout = 9000){
+  return new Promise(res => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ res(""); return; }
+    try{
+      const r = new SR();
+      r.lang = "en-IN";
+      r.interimResults = false;
+      r.maxAlternatives = 1;
+      let done = false;
+      r.onresult = (ev) => { if(done) return; done = true; const t = ev.results[0][0].transcript.trim(); append("You: " + t); try{ r.stop(); }catch{}; res(t); };
+      r.onerror = (e) => { if(done) return; done=true; try{r.stop();}catch{}; res(""); };
+      r.onend = ()=>{ if(done) return; done=true; res(""); };
+      r.start();
+      setTimeout(()=>{ if(done) return; done=true; try{r.stop();}catch{}; res(""); }, timeout);
+    }catch(e){
+      console.warn("listenOnce exception", e);
+      res("");
+    }
+  });
 }
-function append(t){if(transcriptEl.innerHTML.includes("<em>"))transcriptEl.innerHTML="";transcriptEl.innerHTML+=`<div>${t}</div>`;}
-function yes(t){return /yes|yeah|sure|ok|okay/i.test(t);}
-function detectSpec(t){t=t.toLowerCase();let best="General Physician",max=0;for(const s in SPECIALTIES){let c=0;for(const k of SPECIALTIES[s])if(t.includes(k))c++;if(c>max){best=s;max=c;}}return best;}
-
-async function startFlow(){
- let data={symptoms:"",specialist:"",datetime:"",area:"",packages:[],book:false,name:ACCOUNT.name,phone:ACCOUNT.phone};
- transcriptEl.innerHTML="";
-
- await speak("Hi there, I’m Asha. Please tell me what symptoms you’re having.");
- const s=await listenOnce();data.symptoms=s;data.specialist=detectSpec(s);
- await speak(`It seems you may need a ${data.specialist}. Would you like me to help you book an appointment?`);
- const b=await listenOnce();if(yes(b)){data.book=true;await speak("Sure, your account information will be considered for booking.");}else{data.book=false;}
-
- await speak("When and where would you like the appointment, for example, tomorrow morning in Koramangala?");
- const d=await listenOnce();data.datetime=d;data.area=d;
-
- await speak("Would you like me to include a health package for better care?");
- const h=await listenOnce();
- if(yes(h)){
-   data.packages=PACKAGES[data.specialist]||PACKAGES["General Physician"];
-   await speak(`Alright. I found ${data.packages.length} suitable packages like ${data.packages[0]} and ${data.packages[1]}. They will appear in your booking page.`);
- }else{
-   data.packages=[];
-   await speak("Okay, no additional packages will be added.");
- }
-
- await speak("Let me show you the best doctors for you now.");
- const q=new URLSearchParams(data).toString();
- window.location.href="doctors.html?"+q;
+function append(text){ if(transcriptEl.innerHTML.includes("<em>")) transcriptEl.innerHTML = ""; transcriptEl.innerHTML += `<div style="margin:8px 0">${text}</div>`; transcriptEl.scrollTop = transcriptEl.scrollHeight; }
+function containsYes(t){ return /^(yes|yeah|yep|sure|please|ok|okay)\b/i.test((t||"").trim()); }
+function detectSpecialist(text){
+  const t=(text||"").toLowerCase();
+  let top="General Physician",score=0;
+  for(const s in SPECIALTIES){
+    let c=0;
+    for(const kw of SPECIALTIES[s]) if(t.includes(kw)) c++;
+    if(c>score){ score=c; top=s; }
+  }
+  return top;
 }
 
-document.getElementById('startBtn').onclick=()=>{speechSynthesis.cancel();startFlow();};
-document.getElementById('stopBtn').onclick=()=>{try{recog.stop();}catch{}speechSynthesis.cancel();statusEl.textContent="Stopped."};
-document.getElementById('bandhuBtn').onclick=()=>window.location.href='bandhu.html';
-speechSynthesis.onvoiceschanged=()=>{};
+/* ======= Main flow ======= */
+async function runFlow(){
+  // reset
+  transcriptEl.innerHTML = "";
+  let state = {
+    symptoms:"", specialist:"", wantBooking:false, mode:"", datetime:"", area:"", packages:[], accountName:ACCOUNT.name, accountPhone:ACCOUNT.phone
+  };
+
+  // Q1 - symptoms
+  await speak("Hi, I am Asha. Please tell me briefly what symptoms you have.");
+  const q1 = await listenOnce(9000);
+  state.symptoms = q1 || "";
+  state.specialist = detectSpecialist(q1 || "");
+  await speak(`I understand. It sounds like you may need a ${state.specialist}.`);
+
+  // Q2 - do you want booking?
+  await speak("Would you like me to help book an appointment for you?");
+  const q2 = await listenOnce(7000);
+  state.wantBooking = containsYes(q2);
+  if(state.wantBooking) {
+    await speak("Okay — your account information will be used for booking.");
+  } else {
+    await speak("Alright. I will still show recommended doctors for your symptoms.");
+  }
+
+  // Q3 - mode (physical or video)
+  await speak("Do you prefer a physical appointment at a clinic or a video consultation?");
+  const q3 = await listenOnce(7000);
+  const modeText = (q3||"").toLowerCase();
+  if(/video|online|virtual/i.test(modeText)) state.mode = "video"; else state.mode = "physical";
+  await speak(`${state.mode === "video" ? "A video consultation" : "A physical appointment"} — noted.`);
+
+  // Q4 - datetime & area (merged)
+  if(state.mode === "physical"){
+    await speak("Please tell me your preferred day/time and area, for example, tomorrow morning in Koramangala.");
+    const q4 = await listenOnce(9000);
+    state.datetime = q4 || "";
+    // try extract area simple heuristic
+    const areaMatch = (q4 || "").match(/(indiranagar|koramangala|whitefield|jayanagar|hsr)/i);
+    state.area = areaMatch ? areaMatch[0] : "";
+  } else {
+    await speak("Please tell me your preferred day and time for the video consult, for example, tomorrow evening.");
+    const q4 = await listenOnce(9000);
+    state.datetime = q4 || "";
+    state.area = "";
+  }
+
+  // Q5 - package (yes/no)
+  await speak("Would you like to add a health package for better care?");
+  const q5 = await listenOnce(7000);
+  if(containsYes(q5)){
+    state.packages = PACKAGES[state.specialist] || PACKAGES["General Physician"];
+    await speak(`I found ${state.packages.length} suitable packages, such as ${state.packages[0]} and ${state.packages[1]}. These will appear on the booking page.`);
+  } else {
+    state.packages = [];
+    await speak("Okay — no package will be added.");
+  }
+
+  // final: redirect to doctors page with params
+  await speak("Thank you. Showing the best available doctors now.");
+  const params = new URLSearchParams({
+    symptoms: state.symptoms || "",
+    specialist: state.specialist || "",
+    wantBooking: state.wantBooking ? "true" : "false",
+    mode: state.mode || "",
+    datetime: state.datetime || "",
+    area: state.area || "",
+    packages: (state.packages||[]).join(","),
+    accountName: state.accountName,
+    accountPhone: state.accountPhone
+  }).toString();
+  setTimeout(()=> window.location.href = "doctors.html?" + params, 600);
+}
+
+/* ======= button wiring ======= */
+startBtn.addEventListener('click', ()=>{
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  runFlow();
+});
+stopBtn.addEventListener('click', ()=>{
+  try{ if(window.webkitSpeechRecognition && window.recognition) window.recognition.stop(); }catch(e){}
+  speechSynthesis.cancel(); statusEl.textContent = "Stopped.";
+});
+bandhuBtn.addEventListener('click', ()=> window.location.href = "bandhu.html");
+
 </script>
 </body>
 </html>
