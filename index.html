@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Asha - Health Voice Bot</title>
 <style>
   body{font-family:'Poppins',sans-serif;background:#f9f9fb;color:#333;text-align:center;padding:2rem}
   h1{color:#007bff;margin-bottom:1rem}
-  button{background:#007bff;color:white;border:none;padding:0.8rem 1.6rem;font-size:1rem;border-radius:8px;cursor:pointer}
+  button{background:#007bff;color:white;border:none;padding:0.8rem 1.6rem;font-size:1rem;border-radius:8px;cursor:pointer;margin:0.4rem}
   button:hover{background:#0056b3}
-  button.secondary{background:#e6eefc;color:#007bff;margin-left:8px}
+  button.secondary{background:#e6eefc;color:#007bff}
   #statusText{margin-top:1rem;font-weight:600}
   #micAnimation.listening{width:50px;height:50px;border-radius:50%;background:#ff4747;margin:1rem auto;animation:pulse 1s infinite}
   @keyframes pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:0.6}100%{transform:scale(1);opacity:1}}
@@ -22,6 +22,7 @@
   <p>Hi! I’m Asha, your friendly health assistant. Click below to start talking!</p>
 
   <button id="startBtn">🎤 Talk to Asha</button>
+  <button id="endBtn" class="secondary" style="display:none;">⏹ End Call</button>
   <button id="openWidget" class="secondary">💬 Open Official Widget</button>
 
   <div id="micAnimation"></div>
@@ -44,6 +45,7 @@
     const mic = document.getElementById("micAnimation");
     const box = document.getElementById("transcriptBox");
     const text = document.getElementById("transcriptText");
+    const endBtn = document.getElementById("endBtn");
 
     if(!window.elevenlabs || !window.elevenlabs.Conversation){
       s.textContent="❌ ElevenLabs SDK failed to load.";
@@ -57,6 +59,7 @@
         s.textContent="🎤 Listening… Speak now!";
         mic.classList.add("listening");
         box.style.display="block";
+        endBtn.style.display="inline-block";
       },
       onMessage:(msg)=>{
         const who = msg.source==="user"?"You":"Asha";
@@ -70,17 +73,32 @@
         handleExtractAndRedirect(transcript);
       }
     });
+
     try{await conversationWidget.startSession();}
     catch(e){console.error(e);s.textContent="❌ Could not connect.";}
   }
 
-  // rudimentary keyword extraction & redirect
+  // manual end call
+  function endCall() {
+    if(conversationWidget && conversationWidget.stopSession) {
+      conversationWidget.stopSession();
+    }
+    handleExtractAndRedirect(transcript);
+  }
+
+  // keyword-based extraction
   function handleExtractAndRedirect(t){
+    if(!t || t.length<10) {
+      alert("Conversation too short to extract details!");
+      return;
+    }
+
     const data = {};
     const lower = t.toLowerCase();
+
     if(lower.includes("heart")||lower.includes("chest")) data.specialist="Cardiologist";
     else if(lower.includes("skin")) data.specialist="Dermatologist";
-    else if(lower.includes("stomach")||lower.includes("burn")||lower.includes("acid")) data.specialist="Gastroenterologist";
+    else if(lower.includes("stomach")||lower.includes("acid")) data.specialist="Gastroenterologist";
     else data.specialist="General Physician";
 
     const dateMatch = t.match(/(\d{1,2}\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|tomorrow)/i);
@@ -103,13 +121,17 @@
   }
 
   document.getElementById("startBtn").addEventListener("click", startAsha);
+  document.getElementById("endBtn").addEventListener("click", endCall);
+
   document.getElementById("openWidget").addEventListener("click", ()=>{
     const html = `
       <!doctype html><meta charset="utf-8">
       <title>Asha Widget</title>
       <elevenlabs-convai agent-id="${AGENT_ID}"></elevenlabs-convai>
       <script src="https://elevenlabs.io/convai-widget/index.js"><\/script>`;
-    const w = window.open(); w.document.write(html); w.document.close();
+    const w = window.open();
+    w.document.write(html);
+    w.document.close();
   });
   </script>
 </body>
