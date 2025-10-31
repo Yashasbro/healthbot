@@ -32,7 +32,8 @@
   </div>
 
   <!-- ✅ Correct ElevenLabs CDN path -->
-  <script src="https://cdn.elevenlabs.io/convai-widget/index.js"></script>
+ <script src="https://cdn.elevenlabs.io/convai-widget/v1/convai-widget.js"></script>
+
 
   <script>
   const ELEVENLABS_AGENT_ID = "agent_1901k8v4exkseqk9s4ts0a5ycks2";
@@ -107,4 +108,6 @@
   document.getElementById("endCallBtn").addEventListener("click",()=>{if(conversationWidget)conversationWidget.stopSession();handleConversationEnd();});
   </script>
 </body>
-</html>
+
+
+
