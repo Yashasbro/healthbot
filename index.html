@@ -1,44 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Asha — Health Voice Assistant</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Asha — Voice Health Assistant</title>
 <style>
-body { font-family:Poppins,sans-serif;background:#f6f8fb;color:#111;text-align:center;padding:28px; }
-h1 { color:#0b5cff;margin-bottom:1rem; }
-#card { background:#fff;border-radius:12px;max-width:760px;margin:0 auto;padding:20px;box-shadow:0 6px 24px rgba(9,30,66,0.08);text-align:left; }
-button { background:#0b5cff;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;margin:8px; }
-button:hover { background:#004fcc; }
-#status { font-weight:600;margin-top:10px; }
-#transcript { background:#f8fafc;border-radius:8px;padding:12px;margin-top:12px;min-height:90px; }
-.hint { font-size:13px;color:#666;margin-top:8px; }
+body {
+  font-family: Poppins, sans-serif;
+  background: #f7f9fb;
+  color: #111;
+  text-align: center;
+  padding: 32px;
+}
+h1 { color: #0b5cff; margin-bottom: 1rem; }
+#card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 700px;
+  margin: auto;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+button {
+  background: #0b5cff;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin: 8px;
+}
+button:hover { background: #004fcc; }
+#status { font-weight: 600; margin-top: 10px; }
+#transcript {
+  background: #f1f3f5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  text-align: left;
+  font-size: 15px;
+}
+.hidden { display: none; }
 </style>
 </head>
 
 <body>
-<h1>🩺 Asha — Your Health Voice Assistant</h1>
-
+<h1>🩺 Asha — Your Health Assistant</h1>
 <div id="card">
-  <p>Talk naturally with Asha. She’ll understand your symptoms, suggest doctors and packages, and help you book easily.</p>
-  <button id="startBtn">🎤 Start Talking</button>
+  <p>Talk to Asha about your symptoms. She’ll understand and suggest the right doctor.</p>
+  <button id="startBtn">🎤 Talk to Asha</button>
   <button id="stopBtn">⏹ Stop</button>
+  <button id="bandhuBtn" style="background:#19a974;">🤝 Meet Bandhu</button>
   <div id="status">Status: idle</div>
-  <div id="transcript"><em>Transcript will appear here.</em></div>
-  <div class="hint">Best used in Chrome. Allow microphone when asked.</div>
+  <div id="transcript"><em>Transcript will appear here...</em></div>
 </div>
 
 <script>
-/*------------------------
-  1. CONFIG & HELPERS
--------------------------*/
 const SPECIALTIES = {
-  "Cardiologist": ["heart","chest pain","palpitation","bp","blood pressure"],
-  "Gastroenterologist": ["stomach","acidity","heartburn","vomit","diarrhea","ulcer"],
-  "Dermatologist": ["skin","rash","itch","acne","eczema"],
-  "Neurologist": ["headache","migraine","dizzy","seizure","numbness"],
-  "ENT": ["ear","nose","throat","sinus","hearing"],
-  "General Physician": ["fever","cold","cough","tired","body ache"]
+  "Cardiologist": ["heart", "chest pain", "bp", "blood pressure", "palpitation"],
+  "Gastroenterologist": ["stomach", "acid", "vomit", "diarrhea", "indigestion"],
+  "Dermatologist": ["skin", "itch", "rash", "acne"],
+  "Neurologist": ["headache", "migraine", "dizzy", "seizure"],
+  "ENT": ["ear", "nose", "throat", "sinus", "hearing"],
+  "General Physician": ["fever", "cold", "cough", "pain", "body ache"]
 };
 
 const PACKAGES = {
@@ -50,112 +75,140 @@ const PACKAGES = {
   "General Physician": "🩺 Full Body Health Package"
 };
 
-let data = { symptoms:null,specialist:null,name:null,phone:null,date:null,time:null,area:null,package:null };
-let currentStep = 0;
-let recognition, isListening=false;
-const statusEl=document.getElementById('status'), transcriptEl=document.getElementById('transcript');
+let recognition;
+let data = { symptoms:"", specialist:"", date:"", time:"", area:"", package:"" };
+const transcriptBox = document.getElementById("transcript");
+const statusBox = document.getElementById("status");
 
-/*------------------------
-  2. SPEECH FUNCTIONS
--------------------------*/
-function speak(txt, cb){
-  const u=new SpeechSynthesisUtterance(txt);
-  u.lang='en-IN';
-  u.pitch=1.1; u.rate=0.95;
-  u.voice=speechSynthesis.getVoices().find(v=>/female/i.test(v.name) && /en-IN|en-GB|en-US/.test(v.lang)) || null;
-  u.onend=()=>cb&&cb();
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
+// -------------- SPEAK FUNCTION --------------
+function speak(text, next) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-IN"; // Indian accent
+  u.rate = 0.95;
+  u.pitch = 1.1;
+
+  // Pick soft Indian female voice if available
+  const voices = speechSynthesis.getVoices();
+  const indianVoice = voices.find(v => /female/i.test(v.name) && /en-IN/.test(v.lang));
+  if (indianVoice) u.voice = indianVoice;
+
+  u.onend = () => next && next();
+  speechSynthesis.speak(u);
+  statusBox.textContent = "Asha: " + text;
 }
-function setStatus(s){ statusEl.textContent="Status: "+s; }
-function appendTranscript(t){ transcriptEl.textContent+=(t+" "); }
 
-/*------------------------
-  3. RECOGNITION
--------------------------*/
-function listen(prompt, cb){
-  speak(prompt,()=>{
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(!SR){alert("SpeechRecognition not supported. Use Chrome.");return;}
-    recognition=new SR(); recognition.lang='en-IN';
-    recognition.onresult=e=>{
-      const t=e.results[0][0].transcript;
-      appendTranscript("\\nYou: "+t);
-      cb(t);
+// -------------- LISTEN FUNCTION --------------
+function listen(prompt, callback) {
+  speak(prompt, () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      alert("Speech Recognition not supported in this browser.");
+      return;
+    }
+    recognition = new SR();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.onresult = e => {
+      const txt = e.results[0][0].transcript;
+      transcriptBox.innerHTML += `<p><strong>You:</strong> ${txt}</p>`;
+      callback(txt);
     };
-    recognition.onerror=e=>setStatus('error: '+e.error);
-    recognition.start(); setStatus('Listening...');
+    recognition.onerror = e => {
+      speak("Sorry, I couldn’t hear you properly.", () => callback(""));
+    };
+    recognition.start();
   });
 }
 
-/*------------------------
-  4. EXTRACTION HELPERS
--------------------------*/
-function getSpecialist(text){
-  text=text.toLowerCase(); let best="General Physician",score=0;
-  for(const s in SPECIALTIES){let c=0;for(const k of SPECIALTIES[s])if(text.includes(k))c++;if(c>score){score=c;best=s;}}
+// -------------- FLOW CONTROL --------------
+function getSpecialist(symptoms) {
+  let best = "General Physician", max = 0;
+  for (const s in SPECIALTIES) {
+    let count = SPECIALTIES[s].filter(k => symptoms.toLowerCase().includes(k)).length;
+    if (count > max) { best = s; max = count; }
+  }
   return best;
 }
-const extractName=t=>(t.match(/(?:my name is|i am|this is)\s+([A-Z]?[a-z]+(?:\\s+[A-Z]?[a-z]+)?)/i)||[])[1];
-const extractPhone=t=>(t.replace(/\\D/g,'').match(/(\\d{10})/)||[])[1];
-const extractDate=t=>/tomorrow/i.test(t)?"Tomorrow":(t.match(/(\\d{1,2}\\/\\d{1,2})/)||[])[1];
-const extractTime=t=>(t.match(/(\\d{1,2}\\s*(?:am|pm))/i)||[])[1];
-const extractArea=t=>["indiranagar","koramangala","whitefield","jayanagar","hsr"].find(a=>t.toLowerCase().includes(a));
-const yes=t=>/yes|yeah|sure|ok|okay/i.test(t);
 
-/*------------------------
-  5. CONVERSATION FLOW
--------------------------*/
-function start(){
-  data={};
-  transcriptEl.textContent=""; setStatus("Starting conversation...");
-  speak("Hi! I'm Asha, your friendly health assistant. How are you feeling today?",()=>askSymptoms());
+const yes = t => /yes|yeah|sure|okay|ok/i.test(t);
+
+// -------------- FLOW STEPS --------------
+function startConversation() {
+  transcriptBox.innerHTML = "";
+  speak("Hi! I’m Asha, your health assistant. How are you feeling today?", () => askSymptoms());
 }
-function askSymptoms(){
-  listen("Please tell me what problems or symptoms you have.",t=>{
-    data.symptoms=t; data.specialist=getSpecialist(t);
-    appendTranscript("\\nAsha: Got it. You may need a "+data.specialist+".");
-    askToBook();
-  });
-}
-function askToBook(){
-  listen("Would you like me to help you book an appointment for this?",t=>{
-    if(yes(t)) askName(); else speak("Alright, I hope you feel better soon. You can always come back to me later!");
-  });
-}
-function askName(){
-  listen("May I know your full name please?",t=>{data.name=extractName(t)||t; askPhone();});
-}
-function askPhone(){
-  listen("What is the best phone number to reach you?",t=>{data.phone=extractPhone(t); askDate();});
-}
-function askDate(){
-  listen("When would you like to visit the doctor? You can say tomorrow or a date.",t=>{data.date=extractDate(t)||t; askTime();});
-}
-function askTime(){
-  listen("What time works for you? Morning or afternoon?",t=>{data.time=extractTime(t)||t; askArea();});
-}
-function askArea(){
-  listen("Which area is convenient for you? Indiranagar, Koramangala, Whitefield or Jayanagar?",t=>{data.area=extractArea(t)||t; askPackage();});
-}
-function askPackage(){
-  listen("Would you also like to add a health package for a full checkup?",t=>{
-    if(yes(t)){ data.package=PACKAGES[data.specialist]||PACKAGES["General Physician"];
-      speak("Based on your symptoms, I suggest the "+data.package+". I’ll include that too.",finish);
-    } else { data.package=null; finish(); }
-  });
-}
-function finish(){
-  speak("Thank you "+(data.name||'dear')+". Redirecting you to the doctor options now.",()=>{
-    const q=new URLSearchParams(data).toString();
-    window.location.href="doctors.html?"+q;
+
+function askSymptoms() {
+  listen("Please tell me what symptoms you are experiencing.", t => {
+    data.symptoms = t;
+    data.specialist = getSpecialist(t);
+    speak(`Got it. Based on what you said, you may need a ${data.specialist}.`, () => askBooking());
   });
 }
 
-/*------------------------
-  6. BUTTON ACTIONS
--------------------------*/
-document.getElementById('startBtn').onclick=start;
-document.getElementById('stopBtn').onclick=()=>{speak("Okay, ending the chat. Hope you feel better soon!");};
+function askBooking() {
+  listen("Would you like me to book an appointment for you?", t => {
+    if (yes(t)) {
+      speak("Alright. Your details will be taken from your logged-in account.", () => askDate());
+    } else {
+      speak("Okay, take care! You can talk to me again anytime.");
+    }
+  });
+}
+
+function askDate() {
+  listen("When would you like to visit the doctor?", t => {
+    data.date = t;
+    askTime();
+  });
+}
+
+function askTime() {
+  listen("What time works best for you? Morning or afternoon?", t => {
+    data.time = t;
+    askArea();
+  });
+}
+
+function askArea() {
+  listen("Which area is convenient for you?", t => {
+    data.area = t;
+    askPackage();
+  });
+}
+
+function askPackage() {
+  listen("Would you like to add a health package too?", t => {
+    if (yes(t)) {
+      data.package = PACKAGES[data.specialist];
+      speak(`I suggest the ${data.package}.`, finish);
+    } else {
+      finish();
+    }
+  });
+}
+
+function finish() {
+  speak("Thank you. Redirecting you to the available doctors now.", () => {
+    const q = new URLSearchParams(data).toString();
+    window.location.href = "doctors.html?" + q;
+  });
+}
+
+// -------------- BUTTON EVENTS --------------
+document.getElementById("startBtn").onclick = () => {
+  speechSynthesis.cancel(); // reset any old speech
+  startConversation();
+};
+document.getElementById("stopBtn").onclick = () => {
+  if (recognition) recognition.stop();
+  speechSynthesis.cancel();
+  statusBox.textContent = "Stopped.";
+};
+document.getElementById("bandhuBtn").onclick = () => window.location.href = "bandhu.html";
+
+// preload voices
+speechSynthesis.onvoiceschanged = () => {};
 </script>
 </body>
 </html>
