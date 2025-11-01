@@ -1,59 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bandhu — Care Helpers</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find a Bandhu</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body{font-family:'Poppins',sans-serif;background:#f4f7fb;margin:0;padding:24px;color:#0b1b2b}
-h1{color:#19a974;text-align:center}
-.filters{display:flex;gap:10px;justify-content:center;margin:16px 0;flex-wrap:wrap}
-select,button{padding:8px 12px;border-radius:8px;border:1px solid #dbe7e0}
-button.book{background:#19a974;color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;max-width:1100px;margin:0 auto}
-.card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 20px rgba(16,24,40,0.06)}
-.thumb{width:100%;height:160px;border-radius:8px;object-fit:cover}
-.meta{font-size:13px;color:#6b7280;margin-top:8px}
+body { font-family:'Poppins',sans-serif; background:#f8f9ff; margin:0; padding:1rem; color:#333; }
+h1 { text-align:center; color:#403ccf; }
+.filter-box {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
+  margin:1rem auto; padding:10px;
+}
+select {
+  padding:8px; border-radius:8px; border:1px solid #ccc;
+  font-family:'Poppins',sans-serif;
+}
+.bandhu-list {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px; margin:1rem auto; width:90%;
+}
+.bandhu-card {
+  background:white; border-radius:12px; padding:12px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.08);
+  transition:transform .2s;
+}
+.bandhu-card:hover{ transform:translateY(-3px); }
+.bandhu-card img { width:100%; border-radius:10px; height:150px; object-fit:cover; }
+.bandhu-card h4 { margin:8px 0 4px; color:#403ccf; }
+.bandhu-card p { margin:4px 0; font-size:13px; }
+.bandhu-card button {
+  background:#403ccf; color:white; border:none;
+  padding:6px 10px; border-radius:8px; cursor:pointer; margin-top:6px;
+}
 </style>
 </head>
 <body>
-<h1>🤝 Bandhu — Care Helpers</h1>
-<div class="filters">
-  <select id="gender"><option value="">Any Gender</option><option>Female</option><option>Male</option></select>
-  <select id="duration"><option value="">Any Duration</option><option>8 Hours</option><option>12 Hours</option><option>24 Hours (Live-in)</option></select>
-  <select id="area"><option value="">Any Area</option><option>Indiranagar</option><option>Koramangala</option><option>Whitefield</option><option>Jayanagar</option></select>
-  <button onclick="applyFilters()">Apply</button>
+
+<h1>🤝 Bandhu Helpers</h1>
+<div class="filter-box">
+  <select id="genderFilter">
+    <option value="">Gender</option>
+    <option value="Female">Female</option>
+    <option value="Male">Male</option>
+  </select>
+  <select id="durationFilter">
+    <option value="">Duration</option>
+    <option value="Short Term">Short Term</option>
+    <option value="Long Term">Long Term</option>
+  </select>
+  <button onclick="applyFilters()">Apply Filters</button>
 </div>
 
-<div id="grid" class="grid"></div>
+<div id="bandhuList" class="bandhu-list"></div>
 
 <script>
-const helpers = [
-  {img:"https://randomuser.me/api/portraits/women/47.jpg",name:"Sita Devi",gender:"Female",duration:"8 Hours",area:"Indiranagar",rating:4.9,exp:"6 yrs",desc:"Elderly care, medication reminders"},
-  {img:"https://randomuser.me/api/portraits/men/49.jpg",name:"Ramesh Kumar",gender:"Male",duration:"12 Hours",area:"Koramangala",rating:4.7,exp:"5 yrs",desc:"Physical therapy assistance"},
-  {img:"https://randomuser.me/api/portraits/women/52.jpg",name:"Lakshmi Nair",gender:"Female",duration:"24 Hours (Live-in)",area:"Whitefield",rating:4.8,exp:"8 yrs",desc:"Round-the-clock care"},
-  {img:"https://randomuser.me/api/portraits/men/54.jpg",name:"Prakash Shetty",gender:"Male",duration:"8 Hours",area:"Jayanagar",rating:4.6,exp:"4 yrs",desc:"Mobility & support"}
+const bandhus = [
+  {name:"Anjali Sharma",exp:"5 years",speciality:"Elderly Care",gender:"Female",duration:"Long Term",img:"https://i.imgur.com/Ss3XG6W.jpg"},
+  {name:"Rahul Verma",exp:"3 years",speciality:"Disability Assistance",gender:"Male",duration:"Short Term",img:"https://i.imgur.com/H5dlG2T.jpg"},
+  {name:"Priya Nair",exp:"4 years",speciality:"Home Nursing",gender:"Female",duration:"Short Term",img:"https://i.imgur.com/M9fAnA7.jpg"}
 ];
-const grid = document.getElementById('grid');
+
 function render(list){
-  grid.innerHTML = "";
-  if(!list.length){ grid.innerHTML = "<p style='text-align:center;color:#6b7280'>No helpers found</p>"; return; }
-  for(const h of list){
-    const card = document.createElement('div'); card.className='card';
-    card.innerHTML = `<img class="thumb" src="${h.img}"><h3>${h.name}</h3><div class="meta">${h.gender} • ${h.duration} • ${h.area}</div><div class="meta">${h.exp} experience • ⭐ ${h.rating}</div><div class="meta">${h.desc}</div><button class="book" onclick="bookHelper('${h.name}')">Book</button>`;
-    grid.appendChild(card);
-  }
+  const div=document.getElementById("bandhuList");
+  div.innerHTML="";
+  list.forEach(b=>{
+    div.innerHTML += `
+      <div class="bandhu-card">
+        <img src="${b.img}" alt="${b.name}">
+        <h4>${b.name}</h4>
+        <p>Experience: ${b.exp}</p>
+        <p>Speciality: ${b.speciality}</p>
+        <p>Gender: ${b.gender}</p>
+        <p>Availability: ${b.duration}</p>
+        <button onclick="bookBandhu('${b.name}')">Book</button>
+      </div>
+    `;
+  });
 }
 function applyFilters(){
-  const g=document.getElementById('gender').value;
-  const d=document.getElementById('duration').value;
-  const a=document.getElementById('area').value;
-  render(helpers.filter(h=> (!g||h.gender===g)&&(!d||h.duration===d)&&(!a||h.area===a) ));
+  const g=document.getElementById("genderFilter").value;
+  const d=document.getElementById("durationFilter").value;
+  let f=bandhus.filter(b=>(!g||b.gender===g)&&(!d||b.duration===d));
+  render(f);
 }
-function bookHelper(name){
-  alert("Booked " + name + ". Our team will contact you soon.");
+function bookBandhu(name){
+  alert(`Booking confirmed for ${name}. Your account details will be used for confirmation.`);
 }
-render(helpers);
+window.onload=()=>render(bandhus);
 </script>
 </body>
 </html>
