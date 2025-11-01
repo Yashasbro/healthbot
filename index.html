@@ -13,8 +13,7 @@ body {
   background: #f8f9ff;
   color: #1a1a1a;
 }
-
-/* Top bar */
+/* Header */
 header {
   background: #403ccf;
   color: white;
@@ -23,24 +22,9 @@ header {
   align-items: center;
   justify-content: space-between;
 }
-header .left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-header .left i {
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  padding: 6px;
-}
-header select {
-  background: transparent;
-  border: none;
-  color: white;
-  font-weight: 500;
-  font-size: 15px;
-  appearance: none;
-}
+header .left { display: flex; align-items: center; gap: 8px; }
+header .left i { background: rgba(255,255,255,0.2); border-radius: 50%; padding: 6px; }
+header select { background: transparent; border: none; color: white; font-weight: 500; font-size: 15px; }
 header .right button {
   background: #ffb100;
   border: none;
@@ -50,8 +34,7 @@ header .right button {
   font-weight: 600;
   cursor: pointer;
 }
-
-/* Search bar */
+/* Search */
 .search-box {
   background: white;
   margin: 14px auto;
@@ -64,82 +47,63 @@ header .right button {
   max-width: 500px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
-.search-box input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 15px;
-}
-
-/* Mic section */
-.mic-container {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
+.search-box input { flex: 1; border: none; outline: none; font-size: 15px; }
+/* Mic */
+.mic-container { display: flex; justify-content: center; margin: 20px 0; }
 .mic {
   background: #403ccf;
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 90px; height: 90px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
   box-shadow: 0 10px 30px rgba(64,60,207,0.3);
-  cursor: pointer;
-  transition: 0.3s;
+  cursor: pointer; transition: 0.3s;
 }
 .mic:hover { transform: scale(1.05); }
-.mic i {
-  color: white;
-  font-size: 36px;
-}
-
-/* Icon grid for categories */
-.section {
-  width: 90%;
-  margin: 0 auto 40px;
-}
-.section h3 {
-  margin: 16px 0 10px;
-}
+.mic i { color: white; font-size: 36px; }
+/* Sections */
+.section, .bandhu-section { width: 90%; margin: 0 auto 40px; }
+.section h3, .bandhu-section h3 { margin: 16px 0 10px; }
 .icon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(100px,1fr));
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(100px,1fr));
   gap: 10px;
 }
 .icon-item {
-  background: white;
-  border-radius: 12px;
-  text-align: center;
-  padding: 14px 8px;
-  font-size: 13px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: transform .2s;
+  background: white; border-radius: 12px; text-align: center;
+  padding: 14px 8px; font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform .2s;
 }
 .icon-item:hover { transform: translateY(-3px); }
-.icon-item i {
-  font-size: 22px;
-  color: #403ccf;
-  margin-bottom: 6px;
+.icon-item i { font-size: 22px; color: #403ccf; margin-bottom: 6px; }
+/* Bandhu cards */
+.bandhu-list {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap: 16px;
+}
+.bandhu-card {
+  background: white; border-radius: 14px; padding: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: transform .2s;
+}
+.bandhu-card:hover { transform: translateY(-3px); }
+.bandhu-card img { width: 100%; border-radius: 12px; height: 140px; object-fit: cover; }
+.bandhu-card h4 { margin: 8px 0 4px; font-size: 16px; }
+.bandhu-card p { margin: 2px 0; font-size: 13px; color: #555; }
+.bandhu-card button {
+  background: #403ccf; color: white; border: none;
+  padding: 6px 10px; border-radius: 8px; font-size: 13px;
+  cursor: pointer; margin-top: 8px;
 }
 </style>
 </head>
 <body>
-
 <header>
   <div class="left">
     <i class="fa fa-user"></i>
     <select>
-      <option>Bangalore</option>
-      <option>Chennai</option>
-      <option>Hyderabad</option>
-      <option>Mumbai</option>
+      <option>Bangalore</option><option>Chennai</option>
+      <option>Hyderabad</option><option>Mumbai</option>
     </select>
   </div>
-  <div class="right">
-    <button>BUY Care Plan</button>
-  </div>
+  <div class="right"><button>BUY Care Plan</button></div>
 </header>
 
 <div class="search-box">
@@ -147,14 +111,14 @@ header .right button {
   <input type="text" placeholder="Search for doctors, clinics, hospitals...">
 </div>
 
-<!-- 🎤 Mic -->
+<!-- Mic -->
 <div class="mic-container">
   <div class="mic" onclick="startVoiceFlow()">
     <i class="fa fa-microphone"></i>
   </div>
 </div>
 
-<!-- Categories -->
+<!-- Doctor Section -->
 <section class="section">
   <h3>Find a Doctor for your Health Problem</h3>
   <div class="icon-grid">
@@ -169,12 +133,36 @@ header .right button {
   </div>
 </section>
 
+<!-- Bandhu Section -->
+<section class="bandhu-section">
+  <h3>Find a Bandhu (Care Companion)</h3>
+  <div class="bandhu-list">
+    <div class="bandhu-card">
+      <img src="https://i.imgur.com/Ss3XG6W.jpg" alt="Nurse 1">
+      <h4>Anjali Sharma</h4><p>Experience: 5 years</p>
+      <p>Speciality: Elderly Care</p><p>Gender: Female</p>
+      <button onclick="bookBandhu('Anjali Sharma')">Book</button>
+    </div>
+    <div class="bandhu-card">
+      <img src="https://i.imgur.com/H5dlG2T.jpg" alt="Nurse 2">
+      <h4>Rahul Verma</h4><p>Experience: 3 years</p>
+      <p>Speciality: Disability Assistance</p><p>Gender: Male</p>
+      <button onclick="bookBandhu('Rahul Verma')">Book</button>
+    </div>
+    <div class="bandhu-card">
+      <img src="https://i.imgur.com/M9fAnA7.jpg" alt="Nurse 3">
+      <h4>Priya Nair</h4><p>Experience: 4 years</p>
+      <p>Speciality: Home Nursing</p><p>Gender: Female</p>
+      <button onclick="bookBandhu('Priya Nair')">Book</button>
+    </div>
+  </div>
+</section>
+
 <script>
-function startVoiceFlow(){
-  // Redirect to index.html and start auto-talking once loaded
-  window.location.href = "index.html?autostart=true";
+function startVoiceFlow(){ window.location.href = "voice.html?autostart=true"; }
+function bookBandhu(name){
+  alert(`Booking request sent for ${name}! Your account details will be used for confirmation.`);
 }
 </script>
-
 </body>
 </html>
