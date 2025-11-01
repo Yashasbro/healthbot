@@ -40,6 +40,14 @@
 /* -------------------------
    Configuration & Data
    ------------------------- */
+  // Auto-start if redirected from home.html
+window.addEventListener("load", () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("autostart") === "true") {
+    document.getElementById("startBtn").click();
+  }
+});
+
 const SPECIALTIES = {
   "Cardiologist":["heart","chest","palpitation","bp","blood pressure","chest pain"],
   "Gastroenterologist":["stomach","acid","heartburn","nausea","indigestion","vomit","gastric"],
@@ -393,3 +401,4 @@ bandhuBtn.addEventListener('click', () => window.location.href = "bandhu.html");
 </script>
 </body>
 </html>
+
