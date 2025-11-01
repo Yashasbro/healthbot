@@ -95,7 +95,7 @@ header .right button {
   font-size: 40px;
 }
 
-/* Category grid */
+/* Section */
 .section {
   width: 90%;
   margin: 0 auto 40px;
@@ -103,6 +103,8 @@ header .right button {
 .section h3 {
   margin: 16px 0 10px;
 }
+
+/* Grid */
 .icon-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit,minmax(110px,1fr));
@@ -122,6 +124,53 @@ header .right button {
   font-size: 22px;
   color: #403ccf;
   margin-bottom: 6px;
+}
+
+/* Bandhu Section */
+.bandhu-section {
+  width: 90%;
+  margin: 0 auto 60px;
+}
+.bandhu-section h3 {
+  margin: 16px 0 14px;
+}
+.bandhu-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap: 16px;
+}
+.bandhu-card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: transform .2s;
+}
+.bandhu-card:hover { transform: translateY(-3px); }
+.bandhu-card img {
+  width: 100%;
+  border-radius: 12px;
+  height: 140px;
+  object-fit: cover;
+}
+.bandhu-card h4 {
+  margin: 8px 0 4px;
+  font-size: 16px;
+}
+.bandhu-card p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #555;
+}
+.bandhu-card button {
+  background: #403ccf;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
 }
 </style>
 </head>
@@ -155,7 +204,7 @@ header .right button {
   </div>
 </div>
 
-<!-- Categories -->
+<!-- Doctor Categories -->
 <section class="section">
   <h3>Find a Doctor for your Health Problem</h3>
   <div class="icon-grid">
@@ -170,10 +219,45 @@ header .right button {
   </div>
 </section>
 
+<!-- 👩‍⚕️ Bandhu Section -->
+<section class="bandhu-section">
+  <h3>Find a Bandhu (Care Companion)</h3>
+  <div class="bandhu-list">
+    <div class="bandhu-card">
+      <img src="https://i.imgur.com/Ss3XG6W.jpg" alt="Nurse 1">
+      <h4>Anjali Sharma</h4>
+      <p>Experience: 5 years</p>
+      <p>Speciality: Elderly Care</p>
+      <p>Gender: Female</p>
+      <button onclick="bookBandhu('Anjali Sharma')">Book</button>
+    </div>
+    <div class="bandhu-card">
+      <img src="https://i.imgur.com/H5dlG2T.jpg" alt="Nurse 2">
+      <h4>Rahul Verma</h4>
+      <p>Experience: 3 years</p>
+      <p>Speciality: Disability Assistance</p>
+      <p>Gender: Male</p>
+      <button onclick="bookBandhu('Rahul Verma')">Book</button>
+    </div>
+    <div class="bandhu-card">
+      <img src="https://i.imgur.com/M9fAnA7.jpg" alt="Nurse 3">
+      <h4>Priya Nair</h4>
+      <p>Experience: 4 years</p>
+      <p>Speciality: Home Nursing</p>
+      <p>Gender: Female</p>
+      <button onclick="bookBandhu('Priya Nair')">Book</button>
+    </div>
+  </div>
+</section>
+
 <script>
 function startVoiceFlow(){
   // Redirect to voice assistant page and trigger auto-start
   window.location.href = "voice.html?autostart=true";
+}
+
+function bookBandhu(name){
+  alert(`Booking request sent for ${name}!\nYour account details will be used for confirmation.`);
 }
 </script>
 
